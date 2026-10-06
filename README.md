@@ -7,13 +7,15 @@ Lab cluster 3 เครื่อง (1 server + 2 agent) สำหรับท�
 - **Vagrant** — สร้าง VM, ตั้งค่า private network, hostname และ `/etc/hosts`
 - **Ansible** — ติดตั้งและตั้งค่า k3s รวมถึง config อื่นๆ ทั้งหมด
 
+📖 ขั้นตอนติดตั้ง k3s ด้วย Ansible แบบละเอียด: [K3S_SETUP.md](K3S_SETUP.md)
+
 ## Nodes
 
-| Hostname      | Role        | IP              | CPU | RAM  |
-|---------------|-------------|-----------------|-----|------|
-| `k3s-server`  | server      | `192.168.56.10` | 2   | 4 GB |
-| `k3s-agent-1` | agent       | `192.168.56.11` | 2   | 2 GB |
-| `k3s-agent-2` | agent       | `192.168.56.12` | 2   | 2 GB |
+| Hostname      | Role   | IP              | CPU | RAM  |
+| ------------- | ------ | --------------- | --- | ---- |
+| `k3s-server`  | server | `192.168.56.10` | 2   | 4 GB |
+| `k3s-agent-1` | agent  | `192.168.56.11` | 2   | 2 GB |
+| `k3s-agent-2` | agent  | `192.168.56.12` | 2   | 2 GB |
 
 - Base box: `bento/ubuntu-24.04`
 - รวมใช้ RAM บน host ประมาณ 8 GB (ถ้าไม่พอ ลด RAM ของ server เหลือ 2–3 GB ได้)
@@ -46,7 +48,7 @@ cluster นี้จึงใช้ `192.168.56.10–12` ซึ่งใช้�
 
 หากต้องการใช้ช่วง IP อื่น (เช่น `10.0.0.0/24`) ต้องเพิ่มช่วงนั้นใน `/etc/vbox/networks.conf` บน host ก่อน (Linux/macOS):
 
-```
+```text
 * 10.0.0.0/24 192.168.56.0/21
 ```
 
@@ -54,10 +56,10 @@ cluster นี้จึงใช้ `192.168.56.10–12` ซึ่งใช้�
 
 ทุก VM มี 2 interface:
 
-| Interface | ประเภท          | IP                                   |
-|-----------|-----------------|--------------------------------------|
+| Interface | ประเภท          | IP                                    |
+| --------- | --------------- | ------------------------------------- |
 | `eth0`    | NAT             | `10.0.2.15` (**เหมือนกันทุกเครื่อง**) |
-| `eth1`    | Private network | `192.168.56.x`                       |
+| `eth1`    | Private network | `192.168.56.x`                        |
 
 ถ้าไม่ระบุ k3s จะเลือก `eth0` ทำให้ node สื่อสารกันไม่ได้ จึงต้องส่ง flag เหล่านี้ทั้งฝั่ง server และ agent เสมอ:
 
@@ -89,17 +91,17 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
 ## Common Commands
 
-| คำสั่ง                                 | ความหมาย                                  |
-|----------------------------------------|-------------------------------------------|
-| `vagrant up`                           | สร้าง/เปิด VM ทั้งหมด                      |
-| `vagrant up k3s-server`                | สร้าง/เปิดเฉพาะเครื่องเดียว                 |
-| `vagrant ssh k3s-server`               | SSH เข้าเครื่อง                             |
-| `vagrant status`                       | ดูสถานะ VM                                 |
-| `vagrant ssh-config`                   | ดู SSH config (host, port, key path)        |
-| `vagrant snapshot save clean`          | บันทึก snapshot                            |
-| `vagrant snapshot restore clean`       | rollback กลับ snapshot เพื่อทดสอบ Ansible ใหม่ |
-| `vagrant halt`                         | ปิด VM                                     |
-| `vagrant destroy -f`                   | ลบ VM ทั้งหมด                              |
+| คำสั่ง                           | ความหมาย                                       |
+| -------------------------------- | ---------------------------------------------- |
+| `vagrant up`                     | สร้าง/เปิด VM ทั้งหมด                          |
+| `vagrant up k3s-server`          | สร้าง/เปิดเฉพาะเครื่องเดียว                    |
+| `vagrant ssh k3s-server`         | SSH เข้าเครื่อง                                |
+| `vagrant status`                 | ดูสถานะ VM                                     |
+| `vagrant ssh-config`             | ดู SSH config (host, port, key path)           |
+| `vagrant snapshot save clean`    | บันทึก snapshot                                |
+| `vagrant snapshot restore clean` | rollback กลับ snapshot เพื่อทดสอบ Ansible ใหม่ |
+| `vagrant halt`                   | ปิด VM                                         |
+| `vagrant destroy -f`             | ลบ VM ทั้งหมด                                  |
 
 ## Troubleshooting
 
