@@ -1,0 +1,69 @@
+- name: Prepare all nodes
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Install curl
+      ansible.builtin.apt:
+        name: curl
+        state: present
+        update_cache: true
+
+- name: Install k3s server
+  hosts: server
+  become: true
+  tasks:
+    - name: Download k3s install script
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: /tmp/k3s-install.sh
+        mode: "0755"
+
+    - name: Install k3s (server)
+      ansible.builtin.command:
+        cmd: >
+          /tmp/k3s-install.sh server
+          --node-ip {{ node_ip }}
+          --advertise-address {{ node_ip }}
+          --flannel-iface {{ flannel_iface }}
+          --write-kubeconfig-mode 644
+        creates: /usr/local/bin/k3s
+      environment:
+        INSTALL_K3S_CHANNEL: stable
+
+    - name: Read join token
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: node_token
+      no_log: true
+
+    - name: Fetch kubeconfig to host
+      ansible.builtin.fetch:
+        src: /etc/rancher/k3s/k3s.yaml
+        dest: ./kubeconfig
+        flat: true
+
+- name: Join agents
+  hosts: agents
+  become: true
+  vars:
+    server_ip: "{{ hostvars[groups['server'][0]].node_ip }}"
+    k3s_token: "{{ hostvars[groups['server'][0]].node_token.content | b64decode | trim }}"
+  tasks:
+    - name: Download k3s install script
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: /tmp/k3s-install.sh
+        mode: "0755"
+
+    - name: Install k3s (agent)
+      ansible.builtin.command:
+        cmd: >
+          /tmp/k3s-install.sh agent
+          --node-ip {{ node_ip }}
+          --flannel-iface {{ flannel_iface }}
+        creates: /usr/local/bin/k3s
+      environment:
+        INSTALL_K3S_CHANNEL: stable
+        K3S_URL: "https://{{ server_ip }}:6443"
+        K3S_TOKEN: "{{ k3s_token }}"
+      no_log: true
