@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TicketLite: Sequence Diagram ของ Domain Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDF1F4; --sheet:#FFFFFF; --ink:#13213A; --muted:#4D5B72; --rule:#CBD4DE; --code-bg:#F3F6F9;
+  --identity:#5A6B85; --catalog:#0D7C78; --booking:#4B3FB0; --payment:#A35C00; --notify:#B4366B; --partner:#2F7D32; --tests:#B3261E; --overview:#13213A;
+  --sans:"IBM Plex Sans Thai","Leelawadee UI",Tahoma,"Noto Sans Thai",sans-serif;
+  --mono:"IBM Plex Mono",Consolas,"SFMono-Regular",Menlo,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1626; --sheet:#152038; --ink:#E3E9F2; --muted:#A1AEC1; --rule:#2B3A56; --code-bg:#1B2742;
+    --identity:#9FB0CC; --catalog:#4FC6C1; --booking:#A69CF2; --payment:#F0AE52; --notify:#F08AB5; --partner:#7BCB7E; --tests:#F2948C; --overview:#E3E9F2;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1626; --sheet:#152038; --ink:#E3E9F2; --muted:#A1AEC1; --rule:#2B3A56; --code-bg:#1B2742;
+  --identity:#9FB0CC; --catalog:#4FC6C1; --booking:#A69CF2; --payment:#F0AE52; --notify:#F08AB5; --partner:#7BCB7E; --tests:#F2948C; --overview:#E3E9F2;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:auto;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 1rem);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.8}
+a{color:inherit}
+a:focus-visible{outline:2px solid var(--booking);outline-offset:3px;border-radius:3px}
+
+/* Header: the ticket stub */
+.stub{max-width:1180px;margin:2.5rem auto 0;padding:0 1.25rem}
+.ticket{display:grid;grid-template-columns:1fr auto;background:var(--sheet);border-radius:14px;position:relative;overflow:hidden}
+.ticket-main{padding:2rem 2rem 1.8rem}
+.ticket-main h1{margin:0 0 .6rem;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.25;font-weight:700;letter-spacing:-.01em}
+.ticket-main p{margin:0;color:var(--muted);max-width:62ch}
+.ticket-side{border-left:2px dashed var(--rule);padding:2rem 1.6rem;display:flex;flex-direction:column;justify-content:center;gap:.25rem;min-width:180px;position:relative}
+.ticket-side::before,.ticket-side::after{content:"";position:absolute;left:-13px;width:24px;height:24px;border-radius:50%;background:var(--paper)}
+.ticket-side::before{top:-12px}.ticket-side::after{bottom:-12px}
+.ticket-side .big{font-size:2.4rem;font-weight:700;line-height:1}
+.ticket-side .small{color:var(--muted);font-size:.9rem}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem;margin-top:1.2rem;padding:0;list-style:none;font-size:.92rem}
+.legend li{display:flex;align-items:center;gap:.45rem}
+.legend .dot,.toc .dot{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+[data-domain="identity"]{--c:var(--identity)}[data-domain="catalog"]{--c:var(--catalog)}[data-domain="booking"]{--c:var(--booking)}
+[data-domain="payment"]{--c:var(--payment)}[data-domain="notify"]{--c:var(--notify)}[data-domain="partner"]{--c:var(--partner)}
+[data-domain="tests"]{--c:var(--tests)}[data-domain="overview"]{--c:var(--overview)}
+
+/* Layout */
+.layout{max-width:1180px;margin:0 auto;padding:1.5rem 1.25rem 4rem;display:grid;grid-template-columns:220px minmax(0,1fr);gap:2rem;align-items:start}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 1.25rem);font-size:.95rem}
+.toc ol{list-style:none;margin:0;padding:0}
+.toc a{display:flex;align-items:center;gap:.55rem;padding:.35rem .6rem;border-radius:8px;text-decoration:none;color:var(--muted)}
+.toc a:hover{background:var(--sheet);color:var(--ink)}
+.toc a.active{background:var(--sheet);color:var(--ink);font-weight:600}
+main{min-width:0}
+.intro{background:var(--sheet);border-radius:14px;padding:1.4rem 1.8rem;margin-bottom:1.5rem}
+.intro p{margin:.4rem 0}
+.intro ul{margin:.4rem 0 .2rem;padding-left:1.3rem}
+section{background:var(--sheet);border-radius:14px;padding:1.6rem 1.8rem 1.2rem;margin-bottom:1.5rem;border-top:5px solid var(--c,var(--ink))}
+section h2{margin:0 0 .8rem;font-size:1.55rem;line-height:1.35;color:var(--c)}
+section h3{margin:2rem 0 .6rem;font-size:1.15rem;line-height:1.4}
+section p{max-width:72ch}
+code{font-family:var(--mono);font-size:.86em;background:var(--code-bg);padding:.08em .38em;border-radius:5px}
+.diagram{overflow-x:auto;background:var(--code-bg);border-radius:10px;padding:1rem;margin:.8rem 0 1.2rem;border:1px solid var(--rule)}
+.diagram pre.mermaid{margin:0;min-width:640px;font-family:var(--mono);font-size:.8rem;white-space:pre;text-align:center;background:transparent}
+.table-wrap{overflow-x:auto;margin:.6rem 0 1rem}
+table{border-collapse:collapse;width:100%;font-size:.95rem;min-width:520px}
+th,td{text-align:left;padding:.55rem .75rem;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;color:var(--muted)}
+tr[data-domain] td:first-child{border-left:4px solid var(--c);font-weight:600;color:var(--c)}
+section[data-domain="tests"] li{margin-bottom:.4rem}
+footer{color:var(--muted);font-size:.88rem;text-align:center;padding:0 1.25rem 2rem}
+
+@media (max-width: 860px){
+  .layout{grid-template-columns:1fr}
+  .toc{position:static}
+  .toc ol{display:flex;flex-wrap:wrap;gap:.3rem}
+  .toc a{background:var(--sheet)}
+}
+@media (max-width: 560px){
+  .ticket{grid-template-columns:1fr}
+  .ticket-side{border-left:none;border-top:2px dashed var(--rule);flex-direction:row;align-items:baseline;gap:.6rem;padding:1.2rem 1.4rem}
+  .ticket-side::before,.ticket-side::after{display:none}
+  .ticket-main,section,.intro{padding-left:1.2rem;padding-right:1.2rem}
+}
+@media print{
+  body{background:#fff}.toc{display:none}.layout{grid-template-columns:1fr}
+  section{break-inside:auto;border:1px solid #ccc}.diagram{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="stub">
+  <div class="ticket">
+    <div class="ticket-main">
+      <h1>TicketLite: Sequence Diagram ของ Domain Events</h1>
+      <p>ทุก event ในระบบ แยกตาม domain ที่เป็นเจ้าของ แสดงว่า event เกิดจากอะไร ใครฟัง และฟังแล้วทำอะไรต่อ</p>
+      <ul class="legend" aria-label="สีของแต่ละ domain">
+        <li data-domain="identity"><span class="dot"></span>Identity</li>
+        <li data-domain="catalog"><span class="dot"></span>Event Catalog</li>
+        <li data-domain="booking"><span class="dot"></span>Booking</li>
+        <li data-domain="payment"><span class="dot"></span>Payment</li>
+        <li data-domain="notify"><span class="dot"></span>Notification</li>
+        <li data-domain="partner"><span class="dot"></span>Partner</li>
+      </ul>
+    </div>
+    <div class="ticket-side">
+      <span class="big">19</span>
+      <span class="small">domain events</span>
+      <span class="small">16 sequence diagrams</span>
+    </div>
+  </div>
+</header>
+<div class="layout">
+  <nav class="toc" aria-label="สารบัญ"><ol><li data-domain="overview"><a href="#overview"><span class="dot"></span>สรุป event ทั้งหมด</a></li><li data-domain="identity"><a href="#identity"><span class="dot"></span>Identity &amp; Access (Keycloak)</a></li><li data-domain="catalog"><a href="#catalog"><span class="dot"></span>Event Catalog</a></li><li data-domain="booking"><a href="#booking"><span class="dot"></span>Booking</a></li><li data-domain="payment"><a href="#payment"><span class="dot"></span>Payment</a></li><li data-domain="notify"><a href="#notify"><span class="dot"></span>Notification</a></li><li data-domain="partner"><a href="#partner"><span class="dot"></span>Partner Integration</a></li><li data-domain="tests"><a href="#tests"><span class="dot"></span>จุดที่ควรเขียน test จาก diagram เหล่านี้</a></li></ol></nav>
+  <main>
+    <div class="intro"><p>เอกสารนี้รวม sequence diagram ของทุก domain event ใน TicketLite แยกตาม domain ที่เป็นเจ้าของ event (producer) โดยแต่ละ diagram แสดงว่า event เกิดจากอะไร ใครฟัง และฟังแล้วทำอะไรต่อ</p>
+<p>ข้อตกลงที่ใช้ในทุก diagram:</p>
+<ul>
+<li>ลูกศรทึบ (<code>-&gt;&gt;</code>) คือ call แบบ synchronous เช่น REST, GraphQL หรือ gRPC</li>
+<li>ลูกศรประ (<code>--&gt;&gt;</code>) คือ response หรือ event ที่ publish ผ่าน message broker</li>
+<li>ทุก service publish event ผ่าน <strong>transactional outbox</strong> คือเขียน event ลงตาราง outbox ใน transaction เดียวกับการเปลี่ยน state แล้วให้ relay ส่งเข้า broker ภายหลัง เพื่อไม่ให้ state กับ event หลุดกัน</li>
+<li>ฝั่งผู้ฟังทุกตัวต้อง <strong>idempotent</strong> โดยกันการประมวลผลซ้ำด้วย <code>eventId</code></li>
+</ul>
+</div>
+    <section id="overview" data-domain="overview"><h2>สรุป event ทั้งหมด</h2>
+<table>
+<thead>
+<tr>
+<th>Domain</th>
+<th>Event</th>
+<th>ผู้ฟัง</th>
+</tr>
+</thead>
+<tbody>
+<tr data-domain="catalog">
+<td>Event Catalog</td>
+<td><code>EventPublished</code></td>
+<td>Partner API</td>
+</tr>
+<tr data-domain="catalog">
+<td>Event Catalog</td>
+<td><code>SalesOpened</code></td>
+<td>Booking, Partner API, Notification</td>
+</tr>
+<tr data-domain="catalog">
+<td>Event Catalog</td>
+<td><code>ShowtimeRescheduled</code></td>
+<td>Booking, Partner API, Notification</td>
+</tr>
+<tr data-domain="catalog">
+<td>Event Catalog</td>
+<td><code>EventCancelled</code></td>
+<td>Booking, Partner API, Notification</td>
+</tr>
+<tr data-domain="booking">
+<td>Booking</td>
+<td><code>SeatsHeld</code></td>
+<td>(ภายใน Booking)</td>
+</tr>
+<tr data-domain="booking">
+<td>Booking</td>
+<td><code>HoldExpired</code></td>
+<td>(ภายใน Booking)</td>
+</tr>
+<tr data-domain="booking">
+<td>Booking</td>
+<td><code>BookingCreated</code></td>
+<td>Payment</td>
+</tr>
+<tr data-domain="booking">
+<td>Booking</td>
+<td><code>BookingConfirmed</code></td>
+<td>Notification, Partner API</td>
+</tr>
+<tr data-domain="booking">
+<td>Booking</td>
+<td><code>TicketsIssued</code></td>
+<td>Notification</td>
+</tr>
+<tr data-domain="booking">
+<td>Booking</td>
+<td><code>BookingExpired</code></td>
+<td>Payment, Notification</td>
+</tr>
+<tr data-domain="booking">
+<td>Booking</td>
+<td><code>BookingCancelled</code></td>
+<td>Payment, Partner API, Notification</td>
+</tr>
+<tr data-domain="booking">
+<td>Booking</td>
+<td><code>TicketRedeemed</code></td>
+<td>Partner API</td>
+</tr>
+<tr data-domain="payment">
+<td>Payment</td>
+<td><code>PaymentSucceeded</code></td>
+<td>Booking</td>
+</tr>
+<tr data-domain="payment">
+<td>Payment</td>
+<td><code>PaymentFailed</code></td>
+<td>Booking, Notification</td>
+</tr>
+<tr data-domain="payment">
+<td>Payment</td>
+<td><code>RefundCompleted</code></td>
+<td>Booking, Notification</td>
+</tr>
+<tr data-domain="notify">
+<td>Notification</td>
+<td><code>NotificationSent</code>, <code>NotificationFailed</code></td>
+<td>(ใช้กับ monitoring)</td>
+</tr>
+<tr data-domain="partner">
+<td>Partner</td>
+<td><code>AllocationExhausted</code></td>
+<td>Notification</td>
+</tr>
+<tr data-domain="partner">
+<td>Partner</td>
+<td><code>WebhookDeliveryFailed</code></td>
+<td>(ใช้กับ monitoring / dead letter)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="identity" data-domain="identity"><h2>0. Identity &amp; Access (Keycloak)</h2>
+<p>Keycloak ไม่มี domain event ของเราเอง แต่ทุก flow เริ่มจากการได้ token มาก่อน diagram นี้จึงแสดงที่มาของ token ที่ใช้ในทุก diagram ถัดไป</p>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    actor U as Customer
+    participant P as Mock Partner
+    participant GW as APISIX
+    participant KC as Keycloak
+    participant BFF as GraphQL BFF
+
+    rect rgba(120,120,200,0.08)
+    Note over U,KC: Customer ใช้ Authorization Code + PKCE
+    U-&gt;&gt;GW: GET /auth (redirect)
+    GW-&gt;&gt;KC: forward ไปหน้า login
+    KC--&gt;&gt;U: authorization code
+    U-&gt;&gt;KC: แลก code เป็น token
+    KC--&gt;&gt;U: access token + refresh token
+    end
+
+    rect rgba(120,200,120,0.08)
+    Note over P,KC: Partner ใช้ Client Credentials
+    P-&gt;&gt;KC: POST /token (client_id, client_secret)
+    KC--&gt;&gt;P: access token พร้อม scopes
+    end
+
+    U-&gt;&gt;GW: POST /graphql + Bearer token
+    GW-&gt;&gt;GW: ตรวจ JWT signature, exp, aud และ rate limit
+    GW-&gt;&gt;BFF: forward พร้อม claims
+    BFF-&gt;&gt;BFF: ตรวจ role และ field-level authorization
+</pre></div>
+</section>
+<section id="catalog" data-domain="catalog"><h2>1. Event Catalog</h2>
+<h3 id="catalog-1">1.1 EventPublished และ SalesOpened</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    actor O as Organizer
+    participant BFF as GraphQL BFF
+    participant CAT as Event Catalog
+    participant MB as Message Broker
+    participant BK as Booking
+    participant PA as Partner API
+    participant NT as Notification
+
+    O-&gt;&gt;BFF: mutation publishEvent(eventId)
+    BFF-&gt;&gt;CAT: gRPC PublishEvent
+    CAT-&gt;&gt;CAT: ตรวจว่า organizer เป็นเจ้าของ event&lt;br/&gt;และมี showtime กับ tier อย่างน้อยอย่างละ 1
+    CAT-&gt;&gt;CAT: status Draft เป็น Published
+    CAT--&gt;&gt;MB: EventPublished
+    CAT--&gt;&gt;BFF: OK
+    MB--&gt;&gt;PA: EventPublished
+    PA-&gt;&gt;PA: เพิ่ม event ในรายการให้ partner เห็น
+
+    Note over CAT: ถึงเวลาเปิดขายตาม SalesWindow (scheduler)
+    CAT-&gt;&gt;CAT: status Published เป็น OnSale
+    CAT--&gt;&gt;MB: SalesOpened
+    MB--&gt;&gt;BK: SalesOpened
+    BK-&gt;&gt;BK: สร้าง seat inventory ของทุก showtime&lt;br/&gt;ใน Postgres และ Redis
+    MB--&gt;&gt;PA: SalesOpened
+    PA-&gt;&gt;PA: เปิดใช้ allocation ของแต่ละ partner
+    MB--&gt;&gt;NT: SalesOpened
+    NT-&gt;&gt;NT: แจ้งผู้ที่กดติดตาม event นี้
+</pre></div>
+<h3 id="catalog-2">1.2 ShowtimeRescheduled</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    actor O as Organizer
+    participant CAT as Event Catalog
+    participant MB as Message Broker
+    participant BK as Booking
+    participant PA as Partner API
+    participant NT as Notification
+
+    O-&gt;&gt;CAT: RescheduleShowtime(showtimeId, newStartAt)
+    CAT-&gt;&gt;CAT: ตรวจ ownership และเวลาใหม่ต้องอยู่ในอนาคต
+    CAT--&gt;&gt;MB: ShowtimeRescheduled(old, new)
+    MB--&gt;&gt;BK: ShowtimeRescheduled
+    BK-&gt;&gt;BK: อัปเดตเวลาใน booking และ ticket ที่เกี่ยวข้อง&lt;br/&gt;เปิดสิทธิ์ขอ refund ภายในกรอบเวลาที่กำหนด
+    MB--&gt;&gt;PA: ShowtimeRescheduled
+    PA--&gt;&gt;PA: เข้าคิว webhook showtime.rescheduled
+    MB--&gt;&gt;NT: ShowtimeRescheduled
+    NT-&gt;&gt;BK: gRPC ListHoldersOfShowtime
+    BK--&gt;&gt;NT: รายชื่อ userId
+    NT-&gt;&gt;NT: ส่ง email แจ้งเวลาใหม่ทุกคน
+</pre></div>
+<h3 id="catalog-3">1.3 EventCancelled (cascade ข้าม domain)</h3>
+<p>event นี้กระทบทุก domain จึงเป็น flow ที่ควรทดสอบให้ละเอียดที่สุด</p>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    actor A as Organizer หรือ Admin
+    participant CAT as Event Catalog
+    participant MB as Message Broker
+    participant BK as Booking
+    participant PAY as Payment
+    participant PA as Partner API
+    participant NT as Notification
+
+    A-&gt;&gt;CAT: CancelEvent(eventId, reason)
+    CAT-&gt;&gt;CAT: status เป็น Cancelled
+    CAT--&gt;&gt;MB: EventCancelled
+    MB--&gt;&gt;BK: EventCancelled
+    BK-&gt;&gt;BK: ปล่อย hold ทั้งหมดและหยุดรับ booking ใหม่
+    loop ทุก booking ที่ Confirmed ของ event นี้
+        BK-&gt;&gt;BK: booking เป็น Cancelled และ ticket เป็น Voided
+        BK--&gt;&gt;MB: BookingCancelled(reason=EVENT_CANCELLED)
+    end
+    MB--&gt;&gt;PAY: BookingCancelled
+    PAY-&gt;&gt;PAY: สร้าง Refund ของแต่ละ payment
+    Note over PAY: ดูรายละเอียดใน 3.3
+    MB--&gt;&gt;PA: EventCancelled และ BookingCancelled
+    PA--&gt;&gt;PA: เข้าคิว webhook ให้ทุก partner ที่ subscribe
+    MB--&gt;&gt;NT: EventCancelled
+    NT-&gt;&gt;NT: ส่ง email แจ้งยกเลิกงาน
+</pre></div>
+</section>
+<section id="booking" data-domain="booking"><h2>2. Booking</h2>
+<h3 id="booking-1">2.1 SeatsHeld และ BookingCreated</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    actor U as Customer
+    participant BFF as GraphQL BFF
+    participant BK as Booking
+    participant R as Redis
+    participant CAT as Event Catalog
+    participant MB as Message Broker
+    participant PAY as Payment
+
+    U-&gt;&gt;BFF: mutation holdSeats(showtimeId, seatIds)
+    BFF-&gt;&gt;BK: gRPC HoldSeats
+    BK-&gt;&gt;BK: ตรวจจำนวนตั๋วต่อ user ต่อรอบ
+    BK-&gt;&gt;R: Lua script SET NX ทุกที่นั่ง TTL 10 นาที
+    alt ได้ครบทุกที่นั่ง
+        R--&gt;&gt;BK: OK
+        BK--&gt;&gt;MB: SeatsHeld(holdId, expiresAt)
+        BK--&gt;&gt;BFF: holdId, expiresAt
+    else มีบางที่นั่งถูก hold ไปแล้ว
+        R--&gt;&gt;BK: CONFLICT (script rollback ทั้งชุด)
+        BK--&gt;&gt;BFF: SEAT_UNAVAILABLE
+    end
+
+    U-&gt;&gt;BFF: mutation createBooking(holdId)
+    BFF-&gt;&gt;BK: gRPC CreateBooking
+    BK-&gt;&gt;R: ตรวจว่า hold ยังอยู่และเป็นของ user นี้
+    BK-&gt;&gt;CAT: gRPC GetTierPrices(showtimeId)
+    CAT--&gt;&gt;BK: ราคาปัจจุบัน
+    BK-&gt;&gt;BK: snapshot ราคาลง booking&lt;br/&gt;status เป็น AwaitingPayment
+    BK--&gt;&gt;MB: BookingCreated(bookingId, amount)
+    BK--&gt;&gt;BFF: bookingId
+    MB--&gt;&gt;PAY: BookingCreated
+    PAY-&gt;&gt;PAY: สร้าง Payment (Initiated)&lt;br/&gt;และ PaymentIntent กับ provider
+    BFF-&gt;&gt;PAY: gRPC GetCheckout(bookingId)
+    PAY--&gt;&gt;BFF: checkout URL หรือ client secret
+    BFF--&gt;&gt;U: ไปหน้าชำระเงิน
+</pre></div>
+<h3 id="booking-2">2.2 HoldExpired และ BookingExpired</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant R as Redis
+    participant BK as Booking
+    participant MB as Message Broker
+    participant PAY as Payment
+    participant NT as Notification
+
+    Note over R,BK: hold ที่ยังไม่ได้สร้าง booking
+    R--&gt;&gt;BK: keyspace notification (key หมดอายุ)
+    BK-&gt;&gt;BK: ที่นั่งกลับเป็น Available
+    BK--&gt;&gt;MB: HoldExpired
+
+    Note over BK: booking ที่ AwaitingPayment จนเลยเวลา (sweeper job ทุก 1 นาที)
+    BK-&gt;&gt;BK: หา booking ที่ expiresAt น้อยกว่าเวลาปัจจุบัน
+    BK-&gt;&gt;BK: status เป็น Expired และคืนที่นั่ง
+    BK--&gt;&gt;MB: BookingExpired
+    MB--&gt;&gt;PAY: BookingExpired
+    PAY-&gt;&gt;PAY: ยกเลิก PaymentIntent ที่ยังไม่จ่าย
+    MB--&gt;&gt;NT: BookingExpired
+    NT-&gt;&gt;NT: แจ้งลูกค้าว่าหมดเวลาชำระเงิน
+</pre></div>
+<p>keyspace notification ของ Redis ไม่รับประกันว่าจะส่งถึง จึงต้องมี sweeper job เป็นตัวสำรองเสมอ</p>
+<h3 id="booking-3">2.3 BookingConfirmed และ TicketsIssued</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant MB as Message Broker
+    participant BK as Booking
+    participant R as Redis
+    participant NT as Notification
+    participant PA as Partner API
+
+    MB--&gt;&gt;BK: PaymentSucceeded(bookingId, paymentId)
+    BK-&gt;&gt;BK: ตรวจ eventId ว่ายังไม่เคยประมวลผล
+    alt booking อยู่ใน AwaitingPayment
+        BK-&gt;&gt;BK: status เป็น Confirmed&lt;br/&gt;ที่นั่งเป็น Sold
+        BK-&gt;&gt;R: ลบ hold keys
+        BK--&gt;&gt;MB: BookingConfirmed
+        BK-&gt;&gt;BK: สร้าง Ticket พร้อม QR code ที่ sign แล้ว
+        BK--&gt;&gt;MB: TicketsIssued
+    else booking Expired ไปแล้ว (เงินเข้าช้า)
+        BK--&gt;&gt;MB: BookingCancelled(reason=LATE_PAYMENT)
+        Note over BK,MB: Payment จะ refund อัตโนมัติ (ดู 3.3)
+    end
+    MB--&gt;&gt;NT: TicketsIssued
+    NT-&gt;&gt;NT: ส่ง email พร้อมตั๋ว
+    MB--&gt;&gt;PA: BookingConfirmed
+    PA-&gt;&gt;PA: ถ้าเป็น booking ของ partner&lt;br/&gt;เข้าคิว webhook booking.confirmed
+</pre></div>
+<h3 id="booking-4">2.4 PaymentFailed ฝั่ง Booking</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant MB as Message Broker
+    participant BK as Booking
+    participant NT as Notification
+    actor U as Customer
+
+    MB--&gt;&gt;BK: PaymentFailed(bookingId, reason)
+    BK-&gt;&gt;BK: booking ยังเป็น AwaitingPayment&lt;br/&gt;ลูกค้าลองจ่ายใหม่ได้จนกว่า hold หมดอายุ
+    MB--&gt;&gt;NT: PaymentFailed
+    NT-&gt;&gt;U: แจ้งว่าชำระไม่สำเร็จ พร้อมลิงก์ลองใหม่
+</pre></div>
+<h3 id="booking-5">2.5 BookingCancelled (ลูกค้าขอยกเลิกเอง)</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    actor U as Customer
+    participant BFF as GraphQL BFF
+    participant BK as Booking
+    participant MB as Message Broker
+    participant PAY as Payment
+    participant NT as Notification
+
+    U-&gt;&gt;BFF: mutation cancelBooking(bookingId)
+    BFF-&gt;&gt;BK: gRPC CancelBooking(bookingId, userId จาก token)
+    BK-&gt;&gt;BK: ตรวจว่า booking เป็นของ userId นี้ (กัน IDOR)&lt;br/&gt;และยังอยู่ในกรอบเวลาที่ยกเลิกได้
+    BK-&gt;&gt;BK: booking เป็น Cancelled&lt;br/&gt;ticket เป็น Voided และที่นั่งกลับเป็น Available
+    BK--&gt;&gt;MB: BookingCancelled(reason=CUSTOMER_REQUEST)
+    BK--&gt;&gt;BFF: OK
+    MB--&gt;&gt;PAY: BookingCancelled
+    PAY-&gt;&gt;PAY: เริ่ม refund (ดู 3.3)
+    MB--&gt;&gt;BK: RefundCompleted
+    BK-&gt;&gt;BK: booking เป็น Refunded
+    MB--&gt;&gt;NT: RefundCompleted
+    NT-&gt;&gt;U: แจ้งว่าคืนเงินแล้ว
+</pre></div>
+<h3 id="booking-6">2.6 TicketRedeemed (สแกนหน้างาน)</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant SC as Scanner Partner
+    participant GW as APISIX
+    participant PA as Partner API
+    participant BK as Booking
+    participant MB as Message Broker
+
+    SC-&gt;&gt;GW: POST /v1/tickets/{code}/redeem
+    GW-&gt;&gt;GW: ตรวจ JWT ว่ามี scope ticket:redeem
+    GW-&gt;&gt;PA: forward
+    PA-&gt;&gt;BK: gRPC RedeemTicket(code, venueId)
+    BK-&gt;&gt;BK: ตรวจ signature ของ QR&lt;br/&gt;ตั๋วต้องเป็น Valid และตรงกับ venue
+    alt ตั๋วใช้ได้
+        BK-&gt;&gt;BK: Valid เป็น Used (conditional update กันสแกนซ้ำพร้อมกัน)
+        BK--&gt;&gt;MB: TicketRedeemed
+        BK--&gt;&gt;PA: OK
+    else ใช้ไปแล้ว หรือ Voided
+        BK--&gt;&gt;PA: TICKET_INVALID
+    end
+    PA--&gt;&gt;SC: ผลการสแกน
+</pre></div>
+</section>
+<section id="payment" data-domain="payment"><h2>3. Payment</h2>
+<h3 id="payment-1">3.1 รับ webhook จนเป็น PaymentSucceeded</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant ST as Stripe / Mock Provider
+    participant GW as APISIX
+    participant PAY as Payment
+    participant DB as Payment DB
+    participant MB as Message Broker
+    participant BK as Booking
+
+    ST-&gt;&gt;GW: POST /webhooks/payment
+    GW-&gt;&gt;GW: IP allowlist, จำกัดขนาด body และ rate limit
+    GW-&gt;&gt;PAY: forward raw body
+    PAY-&gt;&gt;PAY: ตรวจ signature กับ timestamp (ACL)
+    alt signature ไม่ถูกต้อง
+        PAY--&gt;&gt;ST: 400 และบันทึก security log
+    else ถูกต้อง
+        PAY-&gt;&gt;DB: INSERT WebhookEvent(providerEventId)&lt;br/&gt;ON CONFLICT DO NOTHING
+        alt เคยรับ event นี้แล้ว
+            PAY--&gt;&gt;ST: 200 (ไม่ทำซ้ำ)
+        else event ใหม่
+            PAY-&gt;&gt;PAY: แปลง payload ของ provider เป็น domain model
+            PAY-&gt;&gt;PAY: ตรวจยอดเงินตรงกับ Payment&lt;br/&gt;status เป็น Succeeded
+            PAY-&gt;&gt;DB: บันทึก state และ outbox ใน transaction เดียว
+            PAY--&gt;&gt;ST: 200
+            PAY--&gt;&gt;MB: PaymentSucceeded
+            MB--&gt;&gt;BK: PaymentSucceeded
+            Note over BK: ดูต่อใน 2.3
+        end
+    end
+</pre></div>
+<h3 id="payment-2">3.2 PaymentFailed</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant ST as Stripe / Mock Provider
+    participant PAY as Payment
+    participant MB as Message Broker
+    participant BK as Booking
+    participant NT as Notification
+
+    ST-&gt;&gt;PAY: webhook payment_intent.payment_failed
+    PAY-&gt;&gt;PAY: ตรวจ signature และ idempotency (เหมือน 3.1)
+    PAY-&gt;&gt;PAY: status เป็น Failed และเก็บ failure reason
+    PAY--&gt;&gt;ST: 200
+    PAY--&gt;&gt;MB: PaymentFailed
+    MB--&gt;&gt;BK: PaymentFailed
+    MB--&gt;&gt;NT: PaymentFailed
+</pre></div>
+<h3 id="payment-3">3.3 Refund จนเป็น RefundCompleted</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant MB as Message Broker
+    participant PAY as Payment
+    participant ST as Stripe / Mock Provider
+    participant BK as Booking
+    participant NT as Notification
+
+    MB--&gt;&gt;PAY: BookingCancelled(bookingId, reason)
+    PAY-&gt;&gt;PAY: หา Payment ที่ Succeeded ของ booking นี้
+    alt ไม่มี payment (เช่น booking ของ partner)
+        PAY-&gt;&gt;PAY: บันทึกปรับยอด settlement ของ partner
+    else มี payment
+        PAY-&gt;&gt;PAY: สร้าง Refund&lt;br/&gt;ตรวจยอดรวมไม่เกินยอดที่จ่าย
+        PAY-&gt;&gt;ST: POST /refunds + Idempotency-Key = refundId
+        ST--&gt;&gt;PAY: refund pending
+        ST-&gt;&gt;PAY: webhook refund.succeeded
+        PAY-&gt;&gt;PAY: ตรวจ signature และ idempotency&lt;br/&gt;Refund เป็น Completed และ Payment เป็น Refunded
+        PAY--&gt;&gt;MB: RefundCompleted
+        MB--&gt;&gt;BK: RefundCompleted
+        MB--&gt;&gt;NT: RefundCompleted
+    end
+</pre></div>
+</section>
+<section id="notify" data-domain="notify"><h2>4. Notification</h2>
+<p>Notification ฟังทุก event ที่ต้องแจ้งลูกค้า flow ด้านล่างใช้เหมือนกันกับทุก event</p>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant MB as Message Broker
+    participant NT as Notification
+    participant KC as Keycloak Admin API
+    participant SMTP as Email Provider
+    participant DLQ as Dead Letter Queue
+
+    MB--&gt;&gt;NT: event ใดๆ เช่น TicketsIssued
+    NT-&gt;&gt;NT: ตรวจ eventId กันส่งซ้ำ
+    NT-&gt;&gt;KC: ดึง email จาก userId (cache ใน Redis)
+    KC--&gt;&gt;NT: email, locale
+    NT-&gt;&gt;NT: เลือก template ตาม event และ locale&lt;br/&gt;สร้าง Notification (Queued)
+    loop retry สูงสุด 5 ครั้ง (exponential backoff)
+        NT-&gt;&gt;SMTP: ส่ง email
+        alt สำเร็จ
+            SMTP--&gt;&gt;NT: 250 OK
+            NT-&gt;&gt;NT: status เป็น Sent
+            NT--&gt;&gt;MB: NotificationSent
+        else ล้มเหลว
+            SMTP--&gt;&gt;NT: error
+            NT-&gt;&gt;NT: retryCount เพิ่ม 1
+        end
+    end
+    opt ครบจำนวนครั้งแล้วยังไม่สำเร็จ
+        NT-&gt;&gt;NT: status เป็น Failed
+        NT--&gt;&gt;MB: NotificationFailed
+        NT-&gt;&gt;DLQ: ส่งไป dead letter
+    end
+</pre></div>
+</section>
+<section id="partner" data-domain="partner"><h2>5. Partner Integration</h2>
+<h3 id="partner-1">5.1 Partner booking และ AllocationExhausted</h3>
+<p>booking ของ partner ไม่ผ่าน Payment เพราะ partner เก็บเงินลูกค้าเองแล้วเคลียร์ยอดทีหลัง</p>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant P as Mock Partner
+    participant GW as APISIX
+    participant PA as Partner API
+    participant BK as Booking
+    participant MB as Message Broker
+    participant NT as Notification
+
+    P-&gt;&gt;GW: POST /v1/holds
+    GW-&gt;&gt;PA: forward (JWT, scope booking:write)
+    PA-&gt;&gt;PA: ตรวจ allocation ของ partner คงเหลือพอ
+    PA-&gt;&gt;BK: gRPC HoldSeats(channel=PARTNER)
+    BK--&gt;&gt;PA: holdId
+    PA--&gt;&gt;P: holdId
+
+    P-&gt;&gt;GW: POST /v1/bookings + Idempotency-Key
+    GW-&gt;&gt;PA: forward
+    PA-&gt;&gt;PA: ตรวจ Idempotency-Key&lt;br/&gt;ถ้า key ซ้ำแต่ body ต่างกัน ตอบ 422
+    PA-&gt;&gt;PA: เพิ่ม allocation.used แบบ conditional update&lt;br/&gt;(used + n ต้องไม่เกิน quota)
+    PA-&gt;&gt;BK: gRPC CreatePartnerBooking(holdId, partnerId, externalOrderRef)
+    BK-&gt;&gt;BK: status เป็น Confirmed ทันที&lt;br/&gt;และออก ticket
+    BK--&gt;&gt;MB: BookingConfirmed(channel=PARTNER)
+    BK--&gt;&gt;MB: TicketsIssued
+    BK--&gt;&gt;PA: bookingId, tickets
+    PA--&gt;&gt;P: 201 Created
+    opt allocation ใช้ครบแล้ว
+        PA--&gt;&gt;MB: AllocationExhausted(partnerId, showtimeId)
+        MB--&gt;&gt;NT: AllocationExhausted
+        NT-&gt;&gt;NT: แจ้ง organizer
+    end
+</pre></div>
+<h3 id="partner-2">5.2 Outbound webhook และ WebhookDeliveryFailed</h3>
+<div class="diagram"><pre class="mermaid">sequenceDiagram
+    autonumber
+    participant MB as Message Broker
+    participant PA as Partner API
+    participant DB as Partner DB
+    participant P as Mock Partner
+
+    MB--&gt;&gt;PA: event เช่น EventCancelled หรือ BookingCancelled
+    PA-&gt;&gt;DB: หา subscription ที่ตรงกับ event type
+    PA-&gt;&gt;DB: สร้าง WebhookDelivery (Pending) ต่อ subscription
+    loop จนสำเร็จ หรือครบ 8 ครั้ง (backoff 1m, 5m, 30m, ...)
+        PA-&gt;&gt;PA: sign payload ด้วย HMAC-SHA256&lt;br/&gt;header มี timestamp และ deliveryId
+        PA-&gt;&gt;P: POST {subscription.url} (timeout 5s)
+        alt partner ตอบ 2xx
+            P--&gt;&gt;PA: 200
+            PA-&gt;&gt;DB: status เป็น Delivered
+        else timeout หรือ non-2xx
+            P--&gt;&gt;PA: 500 / timeout
+            PA-&gt;&gt;DB: attempt เพิ่ม 1 และตั้ง nextRetryAt
+        end
+    end
+    opt ครบจำนวนครั้งแล้ว
+        PA-&gt;&gt;DB: status เป็น Dead
+        PA--&gt;&gt;MB: WebhookDeliveryFailed
+    end
+</pre></div>
+</section>
+<section id="tests" data-domain="tests"><h2>จุดที่ควรเขียน test จาก diagram เหล่านี้</h2>
+<ul>
+<li><strong>Race condition</strong> ใน 2.1 กับ 5.1: ยิง hold ที่นั่งเดียวกันพร้อมกันหลาย request ต้องมีคนได้แค่คนเดียว และ partner ต้องจองเกินโควตาไม่ได้</li>
+<li><strong>Late payment</strong> ใน 2.3: เงินเข้าหลัง booking expired ต้องจบที่ refund ไม่ใช่ confirm</li>
+<li><strong>Duplicate event</strong> ทุก consumer: ส่ง event เดิมซ้ำต้องไม่เกิดผลซ้ำ</li>
+<li><strong>Webhook replay</strong> ใน 3.1: ส่ง payload เดิมที่ signature ถูกต้องซ้ำ ต้องไม่ประมวลผลซ้ำ และ payload ที่ timestamp เก่าต้องถูกปฏิเสธ</li>
+<li><strong>IDOR</strong> ใน 2.5: user A ยกเลิก booking ของ user B ไม่ได้</li>
+<li><strong>Double scan</strong> ใน 2.6: สแกนตั๋วใบเดียวพร้อมกันสองเครื่อง ต้องผ่านแค่ครั้งเดียว</li>
+</ul></section>
+  </main>
+</div>
+<footer>TicketLite DevSecOps lab</footer>
+<script>
+document.querySelectorAll('main table').forEach(t=>{const w=document.createElement('div');w.className='table-wrap';t.parentNode.insertBefore(w,t);w.appendChild(t);});
+const links=[...document.querySelectorAll('.toc a')];
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-20% 0px -70% 0px'});
+  document.querySelectorAll('main section').forEach(s=>io.observe(s));
+}
+</script>
+
+<!--claude-mermaid-runtime-begin:3477-->
+<style>.mermaid-diagram{margin-block:4px}.mermaid-diagram svg{display:block;margin:0 auto;max-width:100%;height:auto}</style>
+<script src="/_runtime/mermaid-11.16.1.min.js"></script>
+<script>(function(){
+var CFG={"palettes":{"light":{"surface":"#f4efe4","text":"#42392e","line":"#8a7f6d","border":"#7a6c52","bg":"#fffdf8"},"dark":{"surface":"#262b34","text":"#f2f3f5","line":"#a8adb8","border":"#9aa4b8","bg":"#1f232b"}}};
+if(typeof mermaid==='undefined')return;
+var pres=Array.prototype.slice.call(document.querySelectorAll('pre.mermaid')).filter(function(p){if(p.hasAttribute('data-claude-mermaid-claimed'))return false;p.setAttribute('data-claude-mermaid-claimed','1');return true;});
+if(!pres.length)return;
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+var root=document.documentElement;
+var items=pres.map(function(pre){
+var mount=document.createElement('div');mount.className='mermaid-diagram';
+return {pre:pre,mount:mount,src:pre.textContent||''};
+});
+var seq=0;
+var renderGen=0;
+var lastKey='';
+function pageBg(fallback){
+var els=[document.body,document.documentElement];
+for(var i=0;i<els.length;i++){
+var c=els[i]&&getComputedStyle(els[i]).backgroundColor;
+if(c&&c!=='transparent'&&c!=='rgba(0, 0, 0, 0)')return c;
+}
+return fallback;
+}
+function render(){
+var theme=root.getAttribute('data-theme');
+var dark=theme==='dark'||(!!(mq&&mq.matches)&&theme!=='light');
+var pal=dark?CFG.palettes.dark:CFG.palettes.light;
+var bg=pageBg(pal.bg);
+var key=(dark?'d':'l')+'|'+bg;
+if(key===lastKey)return;
+lastKey=key;
+var gen=++renderGen;
+var font=getComputedStyle(document.body).fontFamily||'sans-serif';
+var nat={useMaxWidth:false};
+mermaid.initialize({
+startOnLoad:false,securityLevel:'strict',theme:'base',
+flowchart:nat,sequence:nat,er:nat,state:nat,class:nat,pie:nat,
+gantt:nat,journey:nat,timeline:nat,gitGraph:nat,mindmap:nat,xyChart:nat,
+quadrantChart:nat,sankey:nat,c4:nat,requirement:nat,block:nat,
+packet:nat,kanban:nat,architecture:nat,radar:nat,
+themeVariables:{background:bg,mainBkg:pal.surface,primaryColor:pal.surface,
+primaryTextColor:pal.text,lineColor:pal.line,primaryBorderColor:pal.border,
+nodeBorder:pal.border,clusterBorder:pal.border,edgeLabelBackground:bg,
+clusterBkg:'rgba(127,127,127,0.07)',titleColor:pal.text,
+darkMode:dark,rowOdd:bg,rowEven:'rgba(127,127,127,0.07)',
+attributeBackgroundColorOdd:bg,attributeBackgroundColorEven:'rgba(127,127,127,0.07)',
+fontSize:'16px',fontFamily:font},
+themeCSS:'.node rect, .node circle, .node polygon, .node path, .cluster rect { stroke-width: 2px; }'
+});
+items.forEach(function(it){
+var id='claude-mermaid-'+seq++;
+mermaid.render(id,it.src).then(function(r){
+if(gen!==renderGen)return;
+var prev=it.pre.previousElementSibling;
+if(prev&&prev.className==='mermaid-diagram'&&prev!==it.mount)return;
+it.mount.innerHTML=r.svg;
+if(!it.mount.parentNode)it.pre.parentNode.insertBefore(it.mount,it.pre);
+it.pre.style.display='none';
+},function(){
+var scratch=document.getElementById(id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+scratch=document.getElementById('d'+id);
+if(scratch)scratch.parentNode.removeChild(scratch);
+if(gen!==renderGen)return;
+if(it.mount.parentNode)it.mount.parentNode.removeChild(it.mount);
+it.pre.style.display='';
+});
+});
+}
+render();
+if(mq&&mq.addEventListener)mq.addEventListener('change',render);
+if(typeof MutationObserver!=='undefined')new MutationObserver(render).observe(root,{attributes:true,attributeFilter:['data-theme']});
+})();</script>
+<!--claude-mermaid-runtime-end-->
+</body>
+</html>

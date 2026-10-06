@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>shop-lab: สรุป Tech Stack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #EDF0F3;
+  --surface: #FFFFFF;
+  --ink: #1C2B3A;
+  --muted: #5B6B7C;
+  --line: #C9D1DA;
+  --built: #1F7A6D;
+  --built-bg: #DDEFEB;
+  --plan: #A86A12;
+  --plan-bg: #F6EAD6;
+  --open: #6B4FA0;
+  --open-bg: #ECE5F6;
+  --node: #F6F8FA;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131A21; --surface: #1B242D; --ink: #E3E8ED; --muted: #98A6B4; --line: #33414F;
+    --built: #5CC2B1; --built-bg: #173A35; --plan: #E2A748; --plan-bg: #3B2E18;
+    --open: #B49BE0; --open-bg: #2E2540; --node: #212C37;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131A21; --surface: #1B242D; --ink: #E3E8ED; --muted: #98A6B4; --line: #33414F;
+  --built: #5CC2B1; --built-bg: #173A35; --plan: #E2A748; --plan-bg: #3B2E18;
+  --open: #B49BE0; --open-bg: #2E2540; --node: #212C37;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+code, .mono { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .88em; }
+main { max-width: 64rem; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.15; margin: 0 0 .75rem; font-weight: 700; letter-spacing: -.01em; }
+h2 { font-size: 1.5rem; margin: 3.5rem 0 .5rem; font-weight: 600; }
+h3 { font-size: 1.1rem; margin: 0 0 .25rem; font-weight: 600; }
+p { margin: 0 0 1rem; max-width: 42rem; }
+.lead { font-size: 1.15rem; color: var(--muted); }
+a { color: inherit; }
+
+.legend { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin: 1.5rem 0 0; padding: 0; list-style: none; font-size: .95rem; }
+.legend li { display: flex; align-items: center; gap: .5rem; }
+.swatch { width: 1.75rem; height: 0; border-top: 3px solid; display: inline-block; }
+.swatch.built { border-color: var(--built); }
+.swatch.plan { border-color: var(--plan); border-top-style: dashed; }
+.swatch.open { border-color: var(--open); border-top-style: dotted; }
+
+.diagram { margin: 2rem 0 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 760px; height: auto; }
+.diagram figcaption { font-size: .9rem; color: var(--muted); padding: 0 1.25rem 1rem; }
+svg text { font-family: "IBM Plex Sans Thai", Tahoma, sans-serif; fill: var(--ink); }
+svg .sub { fill: var(--muted); font-size: 12px; }
+svg .box { fill: var(--node); stroke-width: 2; }
+svg .built { stroke: var(--built); }
+svg .plan { stroke: var(--plan); stroke-dasharray: 7 5; }
+svg .open { stroke: var(--open); stroke-dasharray: 2 4; }
+svg .edge { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+svg .band { fill: none; stroke: var(--line); stroke-width: 1; }
+svg .bandlabel { fill: var(--muted); font-size: 12px; }
+svg marker path { fill: var(--muted); }
+
+.table-wrap { overflow-x: auto; margin-top: 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { width: 100%; border-collapse: collapse; min-width: 640px; }
+th, td { text-align: left; vertical-align: top; padding: .7rem 1rem; border-bottom: 1px solid var(--line); }
+th { font-weight: 600; font-size: .9rem; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 500; white-space: nowrap; }
+td.note { color: var(--muted); font-size: .95rem; }
+tbody tr.group td { background: var(--bg); font-weight: 600; font-size: .95rem; padding-top: .5rem; padding-bottom: .5rem; }
+
+.tag { display: inline-block; font-size: .8rem; font-weight: 600; padding: .1rem .55rem; border-radius: 999px; white-space: nowrap; }
+.tag.built { color: var(--built); background: var(--built-bg); }
+.tag.plan { color: var(--plan); background: var(--plan-bg); }
+.tag.open { color: var(--open); background: var(--open-bg); }
+
+.envs { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+.env { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.25rem; }
+.env ul { margin: .5rem 0 0; padding-left: 1.1rem; }
+.env li { margin-bottom: .35rem; }
+.env .when { color: var(--muted); font-size: .9rem; margin-bottom: .5rem; }
+
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 1rem 0 0; }
+ol.steps > li { counter-increment: s; position: relative; padding: 0 0 1.25rem 3rem; max-width: 46rem; }
+ol.steps > li::before {
+  content: counter(s); position: absolute; left: 0; top: .1rem;
+  width: 2rem; height: 2rem; border-radius: 50%; border: 2px solid var(--ink);
+  display: grid; place-items: center; font-weight: 600; font-size: .9rem;
+}
+ol.steps > li:not(:last-child)::after {
+  content: ""; position: absolute; left: calc(1rem - 1px); top: 2.3rem; bottom: .2rem; width: 2px; background: var(--line);
+}
+ol.steps p { margin: .15rem 0 0; color: var(--muted); }
+
+.contract { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: .5rem; max-width: 46rem; }
+.contract li { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--built); border-radius: 6px; padding: .6rem 1rem; }
+.contract b { font-family: "IBM Plex Mono", monospace; font-weight: 500; margin-right: .5rem; }
+
+.decisions { margin: 1rem 0 0; padding-left: 1.1rem; max-width: 46rem; }
+.decisions li { margin-bottom: .6rem; }
+.decisions li::marker { color: var(--open); }
+
+footer { margin-top: 4rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
+
+@media (max-width: 560px) {
+  main { padding-top: 2rem; }
+  td:first-child { white-space: normal; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>shop-lab: สรุป Tech Stack</h1>
+  <p class="lead">ระบบ microservice ขนาดเล็กสำหรับฝึก DevSecOps และใช้ REST, gRPC, GraphQL ร่วมกันในระบบเดียว เริ่มบน Docker Compose แล้วย้ายขึ้น k3s ที่สร้างด้วย Vagrant และ Ansible</p>
+  <ul class="legend" aria-label="ความหมายของสถานะ">
+    <li><span class="swatch built"></span><span class="tag built">สร้างแล้ว</span> มีโค้ดใน repo</li>
+    <li><span class="swatch plan"></span><span class="tag plan">อยู่ในแผน</span> เลือกแล้ว รอสร้าง</li>
+    <li><span class="swatch open"></span><span class="tag open">ยังต้องเลือก</span> มีตัวเลือกแต่ยังไม่ตัดสินใจ</li>
+  </ul>
+</header>
+
+<figure class="diagram">
+  <svg viewBox="0 0 960 470" role="img" aria-labelledby="dg-title">
+    <title id="dg-title">เส้นทางของ request ตั้งแต่ client ผ่าน APISIX ไปยัง service และฐานข้อมูล พร้อม Keycloak และระบบ observability</title>
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+    </defs>
+
+    <!-- column labels -->
+    <text x="80" y="34" class="bandlabel" text-anchor="middle">ทางเข้า</text>
+    <text x="270" y="34" class="bandlabel" text-anchor="middle">Gateway และ Identity</text>
+    <text x="520" y="34" class="bandlabel" text-anchor="middle">Services (Go)</text>
+    <text x="810" y="34" class="bandlabel" text-anchor="middle">Data และ Messaging</text>
+
+    <!-- client -->
+    <rect x="20" y="170" width="120" height="58" rx="10" class="box built"/>
+    <text x="80" y="196" text-anchor="middle" font-weight="600">Client</text>
+    <text x="80" y="214" text-anchor="middle" class="sub">curl / k6 / web</text>
+
+    <!-- keycloak -->
+    <rect x="195" y="60" width="150" height="62" rx="10" class="box built"/>
+    <text x="270" y="87" text-anchor="middle" font-weight="600">Keycloak 26</text>
+    <text x="270" y="106" text-anchor="middle" class="sub">realm shop, OIDC</text>
+
+    <!-- gateway -->
+    <rect x="195" y="160" width="150" height="78" rx="10" class="box plan"/>
+    <text x="270" y="188" text-anchor="middle" font-weight="600">Apache APISIX</text>
+    <text x="270" y="207" text-anchor="middle" class="sub">openid-connect</text>
+    <text x="270" y="224" text-anchor="middle" class="sub">limit-count, OTel</text>
+
+    <!-- services -->
+    <rect x="430" y="60" width="180" height="56" rx="10" class="box built"/>
+    <text x="520" y="85" text-anchor="middle" font-weight="600">Order</text>
+    <text x="520" y="103" text-anchor="middle" class="sub">REST</text>
+
+    <rect x="430" y="132" width="180" height="56" rx="10" class="box plan"/>
+    <text x="520" y="157" text-anchor="middle" font-weight="600">Catalog</text>
+    <text x="520" y="175" text-anchor="middle" class="sub">GraphQL</text>
+
+    <rect x="430" y="204" width="180" height="56" rx="10" class="box plan"/>
+    <text x="520" y="229" text-anchor="middle" font-weight="600">Inventory</text>
+    <text x="520" y="247" text-anchor="middle" class="sub">gRPC (internal)</text>
+
+    <rect x="430" y="276" width="180" height="56" rx="10" class="box plan"/>
+    <text x="520" y="301" text-anchor="middle" font-weight="600">Payment</text>
+    <text x="520" y="319" text-anchor="middle" class="sub">webhook + event</text>
+
+    <!-- data -->
+    <rect x="720" y="60" width="180" height="56" rx="10" class="box built"/>
+    <text x="810" y="85" text-anchor="middle" font-weight="600">PostgreSQL 16</text>
+    <text x="810" y="103" text-anchor="middle" class="sub">แยก DB ต่อ service</text>
+
+    <rect x="720" y="150" width="180" height="56" rx="10" class="box built"/>
+    <text x="810" y="175" text-anchor="middle" font-weight="600">Redis 7</text>
+    <text x="810" y="193" text-anchor="middle" class="sub">idempotency, rate limit</text>
+
+    <rect x="720" y="276" width="180" height="56" rx="10" class="box open"/>
+    <text x="810" y="301" text-anchor="middle" font-weight="600">Message broker</text>
+    <text x="810" y="319" text-anchor="middle" class="sub">NATS / Redis Streams / Kafka</text>
+
+    <rect x="720" y="204" width="180" height="56" rx="10" class="box open"/>
+    <text x="810" y="229" text-anchor="middle" font-weight="600">Payment provider</text>
+    <text x="810" y="247" text-anchor="middle" class="sub">Stripe test mode / mock</text>
+
+    <!-- edges -->
+    <path d="M140,199 L193,199" class="edge" marker-end="url(#arr)"/>
+    <path d="M270,160 L270,124" class="edge" marker-end="url(#arr)"/>
+    <text x="280" y="146" class="sub">JWKS</text>
+    <path d="M345,190 C390,190 390,88 428,88" class="edge" marker-end="url(#arr)"/>
+    <path d="M345,199 C395,199 395,160 428,160" class="edge" marker-end="url(#arr)"/>
+    <path d="M345,212 C395,212 395,304 428,304" class="edge" marker-end="url(#arr)"/>
+    <path d="M520,116 L520,202" class="edge" marker-end="url(#arr)" stroke-dasharray="3 3"/>
+    <text x="528" y="125" class="sub"></text>
+    <path d="M610,88 L718,88" class="edge" marker-end="url(#arr)"/>
+    <path d="M610,95 C660,95 670,178 718,178" class="edge" marker-end="url(#arr)"/>
+    <path d="M718,232 L612,298" class="edge" marker-end="url(#arr)"/>
+    <path d="M610,312 L718,312" class="edge" marker-end="url(#arr)"/>
+    <path d="M718,326 C660,350 640,350 612,326" class="edge" marker-end="url(#arr)" stroke-dasharray="3 3"/>
+
+    <!-- observability band -->
+    <rect x="20" y="370" width="880" height="80" rx="12" class="band"/>
+    <text x="40" y="394" class="bandlabel">Observability: ทุก component ส่ง telemetry ผ่าน OpenTelemetry</text>
+    <rect x="40" y="405" width="150" height="34" rx="8" class="box built"/>
+    <text x="115" y="427" text-anchor="middle" font-size="13">OTel Collector</text>
+    <rect x="205" y="405" width="110" height="34" rx="8" class="box built"/>
+    <text x="260" y="427" text-anchor="middle" font-size="13">Jaeger</text>
+    <rect x="330" y="405" width="120" height="34" rx="8" class="box plan"/>
+    <text x="390" y="427" text-anchor="middle" font-size="13">Prometheus</text>
+    <rect x="465" y="405" width="100" height="34" rx="8" class="box plan"/>
+    <text x="515" y="427" text-anchor="middle" font-size="13">Grafana</text>
+    <rect x="580" y="405" width="90" height="34" rx="8" class="box plan"/>
+    <text x="625" y="427" text-anchor="middle" font-size="13">Loki</text>
+    <rect x="685" y="405" width="200" height="34" rx="8" class="box plan"/>
+    <text x="785" y="427" text-anchor="middle" font-size="13">cAdvisor + node-exporter</text>
+  </svg>
+  <figcaption>เส้นประระหว่าง Order กับ Inventory คือการเรียกแบบ gRPC ภายใน ส่วนเส้นประจาก broker กลับไป Payment/Order คือ event "ชำระเงินแล้ว"</figcaption>
+</figure>
+
+<section>
+  <h2>ส่วนประกอบทั้งหมด</h2>
+  <p>ตอนนี้ scaffold ใน repo ยังใช้ KrakenD เป็น gateway อยู่ งานถัดไปคือย้ายไป APISIX แบบ standalone</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ส่วนประกอบ</th><th>สิ่งที่เลือก</th><th>สถานะ</th><th>หมายเหตุ</th></tr></thead>
+      <tbody>
+        <tr class="group"><td colspan="4">ทางเข้าและการยืนยันตัวตน</td></tr>
+        <tr><td>API Gateway</td><td>Apache APISIX</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note">เลือกแทน Kong เพราะ Kong OSS หยุดที่ 3.9.1 และ plugin OIDC เป็นของ Enterprise ส่วน APISIX มี <code>openid-connect</code> ในตัว ควร pin เวอร์ชันจาก GitHub releases</td></tr>
+        <tr><td>Identity</td><td>Keycloak 26</td><td><span class="tag built">สร้างแล้ว</span></td><td class="note">realm <code>shop</code>, client <code>web</code> (PKCE), role <code>customer</code> และ <code>admin</code>, import realm จาก JSON</td></tr>
+
+        <tr class="group"><td colspan="4">Services (Go)</td></tr>
+        <tr><td>Order</td><td>REST (chi, pgx, go-redis)</td><td><span class="tag built">สร้างแล้ว</span></td><td class="note">Idempotency-Key ผ่าน Redis, query กรองด้วย user_id กัน IDOR, image distroless non-root</td></tr>
+        <tr><td>Catalog</td><td>GraphQL (gqlgen)</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note">ให้ client query สินค้าแบบยืดหยุ่น</td></tr>
+        <tr><td>Inventory</td><td>gRPC (buf, protoc-gen-go-grpc)</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note">ใช้ภายในเท่านั้น Order เรียกเพื่อจองสต็อก</td></tr>
+        <tr><td>Payment</td><td>REST webhook + event</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note">ตรวจ webhook signature และทำ idempotency กันสัญญาณซ้ำ</td></tr>
+        <tr><td>Payment provider</td><td>Stripe test mode หรือ mock</td><td><span class="tag open">ยังต้องเลือก</span></td><td class="note"></td></tr>
+
+        <tr class="group"><td colspan="4">Data และ messaging</td></tr>
+        <tr><td>Database</td><td>PostgreSQL 16</td><td><span class="tag built">สร้างแล้ว</span></td><td class="note">แยก user และ database ต่อ service</td></tr>
+        <tr><td>Cache</td><td>Redis 7</td><td><span class="tag built">สร้างแล้ว</span></td><td class="note">มี requirepass, ใช้กับ idempotency และ rate limit</td></tr>
+        <tr><td>Message broker</td><td>NATS, Redis Streams หรือ Kafka/RabbitMQ</td><td><span class="tag open">ยังต้องเลือก</span></td><td class="note">ใช้ส่ง event "ชำระเงินแล้ว" จาก Payment ไป Order</td></tr>
+
+        <tr class="group"><td colspan="4">Observability และ testing</td></tr>
+        <tr><td>Tracing</td><td>OTel SDK, OTel Collector, Jaeger</td><td><span class="tag built">สร้างแล้ว</span></td><td class="note">ต้อง propagate context ผ่าน HTTP, gRPC metadata และ message</td></tr>
+        <tr><td>Metrics และ logs</td><td>Prometheus, Grafana, Loki, cAdvisor, node-exporter</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note">ดูสถานะทั้ง service และ resource</td></tr>
+        <tr><td>Load test</td><td>k6</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note">ขอ token จาก Keycloak ก่อนแล้วยิงผ่าน gateway ส่งผลเข้า Prometheus</td></tr>
+
+        <tr class="group"><td colspan="4">DevSecOps</td></tr>
+        <tr><td>CI</td><td>GitHub Actions หรือ Jenkins</td><td><span class="tag open">ยังต้องเลือก</span></td><td class="note"></td></tr>
+        <tr><td>Code quality</td><td>SonarQube (self-hosted)</td><td><span class="tag built">สร้างแล้ว</span></td><td class="note">ใช้ instance ที่มีอยู่</td></tr>
+        <tr><td>Security scanning</td><td>gosec, Semgrep, gitleaks, govulncheck, Trivy, OWASP ZAP</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note">ครอบคลุม SAST, secret, dependency, container และ DAST</td></tr>
+        <tr><td>Supply chain</td><td>Syft (SBOM), cosign (signing)</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note"></td></tr>
+        <tr><td>Cluster security</td><td>kube-bench, Trivy operator, NetworkPolicy</td><td><span class="tag plan">อยู่ในแผน</span></td><td class="note">หลังย้ายขึ้น k3s</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>สภาพแวดล้อม</h2>
+  <div class="envs">
+    <div class="env">
+      <h3>Docker Compose <span class="tag built">สร้างแล้ว</span></h3>
+      <div class="when">Phase แรก รันบนเครื่อง dev</div>
+      <ul>
+        <li>สอง network: <code>edge</code> (gateway, Keycloak) และ <code>backend</code> (service, data)</li>
+        <li>service ไม่เปิด port ออก host เข้าได้ทาง gateway เท่านั้น</li>
+        <li>APISIX จะรันแบบ standalone อ่าน route จาก <code>apisix.yaml</code> ยังไม่ต้องมี etcd</li>
+        <li>รหัสผ่านอยู่ใน <code>.env</code> ที่ไม่ commit</li>
+      </ul>
+    </div>
+    <div class="env">
+      <h3>k3s บน Vagrant + Ansible <span class="tag plan">อยู่ในแผน</span></h3>
+      <div class="when">Phase ถัดไป, 1 server + 2 agents</div>
+      <ul>
+        <li>role <code>common</code>, <code>k3s_server</code>, <code>k3s_agent</code> และ pin เวอร์ชัน k3s</li>
+        <li>ต้องตั้ง <code>node-ip</code> และ <code>flannel-iface</code> เพราะ NAT interface ของ Vagrant ได้ IP ซ้ำกันทุก VM</li>
+        <li>ปิด Traefik แล้วใช้ APISIX Ingress Controller กับ Gateway API</li>
+        <li>ต้องมี image registry (local หรือ GHCR) และเลือก provider กับ box ให้ตรง host</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Gateway contract</h2>
+  <p>เพราะจะลองเปลี่ยน gateway หลายเจ้าในอนาคต ทุกตัวต้องผ่านเงื่อนไขชุดเดียวกัน โดยเขียนเป็น contract test ที่ขยายจาก <code>smoke-test.sh</code></p>
+  <ul class="contract">
+    <li><b>401</b>ไม่มี token หรือ token ปลอมหรือหมดอายุ</li>
+    <li><b>403</b>token ถูกต้องแต่ไม่มี role <code>customer</code></li>
+    <li><b>X-User-Id</b>ค่าที่ client ส่งมาต้องถูกลบ แล้วแทนด้วย claim <code>sub</code> จาก token ที่ตรวจแล้ว</li>
+    <li><b>trace</b>trace ใน Jaeger ต้องต่อเนื่องจาก gateway ถึง service</li>
+    <li><b>429</b>เกิน rate limit ต้องถูกปฏิเสธ</li>
+  </ul>
+</section>
+
+<section>
+  <h2>ลำดับการทำงาน</h2>
+  <ol class="steps">
+    <li><h3>ย้าย gateway เป็น APISIX</h3><p>แทน KrakenD ใน compose, ตั้ง <code>openid-connect</code> กับ Keycloak และเขียน contract test</p></li>
+    <li><h3>เพิ่ม Inventory (gRPC)</h3><p>ให้ Order เรียกต่อ แล้วดู trace ข้าม HTTP ไป gRPC ใน Jaeger</p></li>
+    <li><h3>เพิ่ม Catalog (GraphQL)</h3><p>route ผ่าน APISIX และลอง rate limit แบบ GraphQL</p></li>
+    <li><h3>Payment และ broker</h3><p>เลือก broker และ provider แล้วทำ flow รับสัญญาณชำระเงินแบบ event-driven</p></li>
+    <li><h3>Metrics, logs และ k6</h3><p>ต่อ Prometheus, Grafana, Loki แล้วรัน load test ดูคู่กับ resource</p></li>
+    <li><h3>CI และ security pipeline</h3><p>SonarQube, scanner, SBOM, signing และ DAST</p></li>
+    <li><h3>ย้ายขึ้น k3s</h3><p>สร้าง cluster ด้วย Vagrant และ Ansible แล้วแปลง compose เป็น Helm หรือ Kustomize</p></li>
+  </ol>
+</section>
+
+<section>
+  <h2>เรื่องที่ยังต้องตัดสินใจ</h2>
+  <ul class="decisions">
+    <li>เวอร์ชัน APISIX ที่จะ pin (3.17 ขึ้นไปมี breaking change เรื่อง auth default)</li>
+    <li>Message broker: NATS, Redis Streams หรือ Kafka/RabbitMQ</li>
+    <li>Payment provider: Stripe test mode หรือ mock ที่เขียนเอง</li>
+    <li>CI: GitHub Actions หรือ Jenkins</li>
+    <li>OS ของเครื่อง host และ Vagrant provider (มีผลกับ box และชื่อ network interface)</li>
+    <li>Image registry สำหรับ k3s: local registry หรือ GHCR</li>
+  </ul>
+</section>
+
+<footer>อัปเดตล่าสุด 5 ตุลาคม 2026</footer>
+</main>
+</body>
+</html>
