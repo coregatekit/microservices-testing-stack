@@ -1,0 +1,17 @@
+all:
+  vars:
+    ansible_user: vagrant
+    ansible_ssh_private_key_file: .vagrant/machines/{{ inventory_hostname }}/virtualbox/private_key
+    flannel_iface: eth1 # use interface that connect with 192.168.56.x
+  children:
+    server:
+      hosts:
+        k3s-server: { ansible_host: 192.168.56.10, node_ip: 192.168.56.10 }
+    agents:
+      hosts:
+        k3s-agent1: { ansible_host: 192.168.56.11, node_ip: 192.168.56.11 }
+        k3s-agent2: { ansible_host: 192.168.56.12, node_ip: 192.168.56.12 }
+    k3s_cluster:
+      children:
+        server:
+        agents:
