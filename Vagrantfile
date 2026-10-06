@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
         vb.name         = node[:name]
         vb.cpus         = node[:cpus]
         vb.memory       = node[:memory]
-        vm.linked_clone = true # clone from base disk
+        vb.linked_clone = true # clone from base disk
       end
 
       # provision base image only
