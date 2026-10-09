@@ -1,0 +1,854 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font:
+          14px -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #faf9f5;
+        color: #141413;
+      }
+      img {
+        max-width: 100%;
+      }
+      [hidden]:not([hidden="until-found" i]) {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <title>TicketLite Architecture Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <style>
+      /* Layout: single reading column; summary matrix first, then one section per domain, shared rules last */
+      :root {
+        --bg: #f5f6f8;
+        --surface: #ffffff;
+        --fg: #1b2230;
+        --muted: #5b6577;
+        --line: #dde1e8;
+        --code-bg: #eef1f5;
+        --accent: #2f5d8a;
+        --hex: #2f5d8a;
+        --hex-bg: #e3ecf6;
+        --lay: #8a5a1f;
+        --lay-bg: #f5ebdc;
+        --sli: #2e7a5a;
+        --sli-bg: #dff1e8;
+        --none: #6b6f7a;
+        --none-bg: #eceef2;
+        --f-display:
+          "Bai Jamjuree", "IBM Plex Sans Thai", system-ui, sans-serif;
+        --f-body:
+          "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --f-mono:
+          "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #12161d;
+          --surface: #1a1f28;
+          --fg: #e3e7ee;
+          --muted: #9aa3b2;
+          --line: #2c3340;
+          --code-bg: #212835;
+          --accent: #8db4dc;
+          --hex: #9cc0e6;
+          --hex-bg: #1f3247;
+          --lay: #e2b578;
+          --lay-bg: #3a2d1b;
+          --sli: #84d1ae;
+          --sli-bg: #1b3a2d;
+          --none: #a9aebb;
+          --none-bg: #2a2f39;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #12161d;
+        --surface: #1a1f28;
+        --fg: #e3e7ee;
+        --muted: #9aa3b2;
+        --line: #2c3340;
+        --code-bg: #212835;
+        --accent: #8db4dc;
+        --hex: #9cc0e6;
+        --hex-bg: #1f3247;
+        --lay: #e2b578;
+        --lay-bg: #3a2d1b;
+        --sli: #84d1ae;
+        --sli-bg: #1b3a2d;
+        --none: #a9aebb;
+        --none-bg: #2a2f39;
+        color-scheme: dark;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--f-body);
+        font-size: 16px;
+        line-height: 1.7;
+      }
+      .wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding-inline: 20px;
+        padding-block: 40px 64px;
+        display: grid;
+        gap: 48px;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--f-display);
+        line-height: 1.3;
+        text-wrap: balance;
+        margin: 0;
+      }
+      h1 {
+        font-size: 2.1rem;
+        font-weight: 700;
+      }
+      h2 {
+        font-size: 1.45rem;
+        font-weight: 600;
+      }
+      h3 {
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      p {
+        margin: 0;
+        max-width: 68ch;
+      }
+      section {
+        display: grid;
+        gap: 16px;
+      }
+      .eyebrow {
+        font-family: var(--f-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .lede {
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+      header {
+        display: grid;
+        gap: 12px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--line);
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-family: var(--f-mono);
+      }
+
+      code,
+      pre {
+        font-family: var(--f-mono);
+        font-size: 0.85rem;
+      }
+      code {
+        background: var(--code-bg);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+      pre {
+        background: var(--code-bg);
+        margin: 0;
+        padding: 14px 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        line-height: 1.55;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+      }
+
+      .chip {
+        display: inline-block;
+        font-family: var(--f-mono);
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        padding: 2px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .chip.hex {
+        color: var(--hex);
+        background: var(--hex-bg);
+      }
+      .chip.lay {
+        color: var(--lay);
+        background: var(--lay-bg);
+      }
+      .chip.sli {
+        color: var(--sli);
+        background: var(--sli-bg);
+      }
+      .chip.none {
+        color: var(--none);
+        background: var(--none-bg);
+      }
+
+      .qs {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+      .q {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        display: grid;
+        gap: 6px;
+      }
+      .q b {
+        font-family: var(--f-mono);
+        font-size: 0.8rem;
+        color: var(--accent);
+      }
+      .q span {
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
+      .tablebox {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 640px;
+        font-size: 0.9rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        font-family: var(--f-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td.mark {
+        text-align: center;
+        font-family: var(--f-mono);
+        color: var(--muted);
+      }
+      td.mark.y {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      th.c {
+        text-align: center;
+      }
+
+      .domain {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 22px 22px 24px;
+        display: grid;
+        gap: 14px;
+      }
+      .domain-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 8px 14px;
+      }
+      .domain-head .lang {
+        font-family: var(--f-mono);
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+      .cols {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      .cols > * {
+        min-width: 0;
+      }
+      ul {
+        margin: 0;
+        padding-left: 1.2em;
+        display: grid;
+        gap: 4px;
+      }
+      li {
+        max-width: 68ch;
+      }
+      .label {
+        font-family: var(--f-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+
+      .flow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--f-mono);
+        font-size: 0.9rem;
+      }
+      .flow span.n {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 6px 12px;
+      }
+      .flow span.a {
+        color: var(--muted);
+      }
+      .note {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+      footer {
+        font-size: 0.85rem;
+        color: var(--muted);
+        border-top: 1px solid var(--line);
+        padding-top: 20px;
+      }
+      @media (max-width: 480px) {
+        h1 {
+          font-size: 1.7rem;
+        }
+        .domain {
+          padding: 18px 16px;
+        }
+      }
+    </style>
+
+    <div class="wrap">
+      <header>
+        <div class="eyebrow">TicketLite · DevSecOps microservice lab</div>
+        <h1>Application architecture ของแต่ละ domain</h1>
+        <p class="lede">
+          สรุปการเลือกสถาปัตยกรรมภายใน service ของ TicketLite ว่าแต่ละ domain
+          ใช้แบบไหน เพราะอะไร และโครงโฟลเดอร์หน้าตาเป็นอย่างไร ระบบโดยรวมเป็น
+          microservices + event-driven ผ่าน NATS JetStream โดยมี APISIX เป็น
+          gateway
+        </p>
+        <div class="meta">
+          <span>อัปเดต 8 ต.ค. 2026</span><span>Go · TypeScript</span
+          ><span>monorepo</span>
+        </div>
+      </header>
+
+      <section>
+        <div class="eyebrow">เกณฑ์ตัดสิน</div>
+        <h2>สามคำถามที่ใช้เลือก</h2>
+        <div class="qs">
+          <div class="q">
+            <b>Q1 · กฎ</b
+            ><span
+              >มี state transition หรือ invariant ที่ซับซ้อนไหม ถ้ามี
+              กฎควรมีบ้านของตัวเองใน domain layer</span
+            >
+          </div>
+          <div class="q">
+            <b>Q2 · infra</b
+            ><span
+              >มี infra ที่อยากสลับหรือ fake ได้ไหม ถ้ามี port กับ adapter
+              คุ้มค่า</span
+            >
+          </div>
+          <div class="q">
+            <b>Q3 · งานส่งต่อ</b
+            ><span
+              >งานหลักคืออ่าน แปล หรือส่งต่อใช่ไหม ถ้าใช่
+              ชั้นที่ซ้อนกันเป็นแค่พิธีกรรม</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="eyebrow">ภาพรวม</div>
+        <h2>สรุปการเลือก</h2>
+        <div class="tablebox">
+          <table>
+            <thead>
+              <tr>
+                <th>Domain</th>
+                <th>สถาปัตยกรรม</th>
+                <th class="c">Q1</th>
+                <th class="c">Q2</th>
+                <th class="c">Q3</th>
+                <th>เหตุผลหลัก</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>booking</b></td>
+                <td><span class="chip hex">Hexagonal</span></td>
+                <td class="mark y">ใช่</td>
+                <td class="mark y">ใช่</td>
+                <td class="mark">ไม่</td>
+                <td>state machine, กฎเวลา hold, adapter หลายทาง</td>
+              </tr>
+              <tr>
+                <td><b>payment</b></td>
+                <td><span class="chip hex">Hexagonal</span></td>
+                <td class="mark y">ใช่</td>
+                <td class="mark y">ใช่</td>
+                <td class="mark">ไม่</td>
+                <td>
+                  payment provider เป็น adapter ตั้งแต่วันแรก (Stripe + mock)
+                </td>
+              </tr>
+              <tr>
+                <td><b>catalog</b></td>
+                <td><span class="chip lay">Layered + repo interface</span></td>
+                <td class="mark">น้อย</td>
+                <td class="mark">ไม่</td>
+                <td class="mark y">ใช่</td>
+                <td>CRUD และอ่านเป็นหลัก กฎมีไม่กี่ข้อ</td>
+              </tr>
+              <tr>
+                <td><b>notification</b></td>
+                <td><span class="chip sli">Vertical slice</span></td>
+                <td class="mark">ไม่</td>
+                <td class="mark y">ช่องทางส่ง</td>
+                <td class="mark y">ใช่</td>
+                <td>แต่ละ event ที่ consume เป็น slice อิสระ</td>
+              </tr>
+              <tr>
+                <td><b>partner-api</b></td>
+                <td><span class="chip lay">Layered แบบบาง</span></td>
+                <td class="mark">ไม่</td>
+                <td class="mark">ไม่</td>
+                <td class="mark y">ใช่</td>
+                <td>
+                  แปล contract ของ partner แล้วส่งต่อ ไม่มี domain ของตัวเอง
+                </td>
+              </tr>
+              <tr>
+                <td><b>GraphQL BFF</b></td>
+                <td><span class="chip sli">Feature module</span></td>
+                <td class="mark">ไม่</td>
+                <td class="mark">ไม่</td>
+                <td class="mark y">ใช่</td>
+                <td>API Composition, resolver แบ่งตาม type อยู่แล้ว</td>
+              </tr>
+              <tr>
+                <td><b>mock-partner</b></td>
+                <td><span class="chip none">ไม่ต้องมี</span></td>
+                <td class="mark">ไม่</td>
+                <td class="mark">ไม่</td>
+                <td class="mark">ไม่</td>
+                <td>เป็น script จำลอง partner แบ่งตาม scenario</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <div class="eyebrow">รายละเอียด</div>
+        <h2>แต่ละ domain</h2>
+
+        <article class="domain" id="booking">
+          <div class="domain-head">
+            <h3>booking</h3>
+            <span class="chip hex">Hexagonal</span><span class="lang">Go</span>
+          </div>
+          <p>
+            ตอบ "ใช่" ทั้ง Q1 และ Q2 ชัดเจน Booking aggregate มี status flow
+            <code>PENDING_PAYMENT → CONFIRMED / EXPIRED</code> และกฎเรื่องเวลา
+            hold ทางเข้ามีสองทาง (HTTP และ NATS consumer) ส่วนทางออกมี Postgres,
+            Redis, NATS และ catalog โปรเจคตัวอย่างสร้างไว้แล้ว
+          </p>
+          <div class="cols">
+            <div>
+              <div class="label">โครงโฟลเดอร์</div>
+              <pre><code>services/booking/
+├── cmd/server/main.go
+├── internal/
+│   ├── domain/       booking, events, errors
+│   ├── app/          use case + ports.go
+│   ├── adapters/
+│   │   ├── httpapi/     driving
+│   │   ├── messaging/   driving + driven
+│   │   ├── postgres/    driven
+│   │   ├── redisstore/  driven (seat hold)
+│   │   ├── catalog/     driven (gRPC client)
+│   │   └── idgen/
+│   └── config/
+└── migrations/</code></pre>
+            </div>
+            <div>
+              <div class="label">จุดสำคัญ</div>
+              <ul>
+                <li>
+                  กฎอยู่ใน method ของ aggregate เช่น <code>Confirm()</code>,
+                  <code>Expire()</code>
+                </li>
+                <li>
+                  <code>app/</code> คือชั้น use case ทำหน้าที่ประสานงาน
+                  ไม่ตัดสินกฎ
+                </li>
+                <li><code>Clock</code> เป็น port เพื่อ test กรณีหมดเวลาได้</li>
+                <li>Redis hold ใช้ Lua script แบบ all-or-nothing</li>
+                <li>ดึง event ออกจาก aggregate ก่อน save</li>
+              </ul>
+              <div class="label" style="margin-top: 12px">ยังไม่ทำ</div>
+              <ul>
+                <li>Transactional outbox</li>
+                <li>Scheduler สำหรับ <code>ExpireBooking</code></li>
+                <li>Optimistic locking (คอลัมน์ <code>version</code>)</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="domain" id="payment">
+          <div class="domain-head">
+            <h3>payment</h3>
+            <span class="chip hex">Hexagonal</span><span class="lang">Go</span>
+          </div>
+          <p>
+            เป็น service ที่ hexagonal ให้ประโยชน์เห็นชัดที่สุด เพราะ
+            <code>PaymentProvider</code> มี adapter สองตัวจริงตั้งแต่วันแรก
+            และเป็นจุดอ่อนด้าน security มากที่สุดในระบบ
+            การแยกการตรวจลายเซ็นไว้ใน adapter กับกฎสถานะไว้ใน domain ทำให้
+            review ง่าย
+          </p>
+          <div class="cols">
+            <div>
+              <div class="label">โครงโฟลเดอร์</div>
+              <pre><code>services/payment/
+├── cmd/server/main.go
+├── internal/
+│   ├── domain/       payment (state machine)
+│   ├── app/          create, handle webhook, refund
+│   └── adapters/
+│       ├── httpapi/     REST + webhook endpoint
+│       ├── provider/
+│       │   ├── stripe/
+│       │   └── mock/
+│       ├── postgres/
+│       └── messaging/   publish payment.succeeded
+└── migrations/</code></pre>
+            </div>
+            <div>
+              <div class="label">จุดสำคัญ</div>
+              <ul>
+                <li>
+                  state machine
+                  <code>pending → succeeded / failed → refunded</code> อยู่ใน
+                  domain
+                </li>
+                <li>ตรวจลายเซ็น webhook ใน adapter ก่อนเข้าถึง core</li>
+                <li>
+                  webhook ต้อง idempotent ใช้ event id ของ provider
+                  กันการประมวลผลซ้ำ
+                </li>
+                <li>
+                  ควรใช้ outbox ตั้งแต่ต้น เพราะ event
+                  <code>payment.succeeded</code> หายไม่ได้
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="domain" id="catalog">
+          <div class="domain-head">
+            <h3>catalog</h3>
+            <span class="chip lay">Layered + repository interface</span
+            ><span class="lang">Go</span>
+          </div>
+          <p>
+            งานส่วนใหญ่คือจัดการ event, ที่นั่ง และราคา แล้วตอบ gRPC ให้ booking
+            อ่าน กฎที่มีจริงวางใน service layer ได้โดยไม่ยุ่ง และได้เห็น layered
+            กับ hexagonal อยู่คู่กันในระบบเดียวเพื่อเปรียบเทียบ
+          </p>
+          <div class="cols">
+            <div>
+              <div class="label">โครงโฟลเดอร์</div>
+              <pre><code>services/catalog/
+├── cmd/server/main.go
+├── internal/
+│   ├── grpcapi/      handler (proto ↔ model)
+│   ├── service/      logic + กฎไม่กี่ข้อ
+│   ├── repository/   interface + postgres impl
+│   ├── model/
+│   └── config/
+└── migrations/</code></pre>
+            </div>
+            <div>
+              <div class="label">จุดสำคัญ</div>
+              <ul>
+                <li>
+                  flow: <code>grpcapi → service → repository → Postgres</code>
+                </li>
+                <li>
+                  repository เป็น interface เพื่อ test service ได้ด้วย fake
+                </li>
+                <li>ตัวอย่างกฎ: ลด capacity ต่ำกว่าจำนวนที่ขายไปแล้วไม่ได้</li>
+              </ul>
+              <div class="label" style="margin-top: 12px">ทางย้ายในอนาคต</div>
+              <p class="note">
+                ถ้ามีกฎเพิ่ม เช่น pricing tier หรือเปิดขายเป็นรอบ ให้ดึงกฎจาก
+                <code>service/</code> ลง <code>domain/</code> ย้ายไป hexagonal
+                ได้ไม่ยากเพราะ repository เป็น interface อยู่แล้ว
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="domain" id="notification">
+          <div class="domain-head">
+            <h3>notification</h3>
+            <span class="chip sli">Vertical slice</span
+            ><span class="lang">Go</span>
+          </div>
+          <p>
+            ทำงานเป็น consumer เป็นหลัก แต่ละ handler แทบไม่แชร์ logic กัน
+            จึงแบ่งโฟลเดอร์ตาม event ส่วนที่แชร์มีแค่ช่องทางการส่ง ซึ่งเป็น
+            interface เล็กๆ ตัวเดียว
+          </p>
+          <div class="cols">
+            <div>
+              <div class="label">โครงโฟลเดอร์</div>
+              <pre><code>services/notification/
+├── cmd/worker/main.go
+├── internal/
+│   ├── onbookingconfirmed/   ส่งตั๋ว
+│   ├── onbookingexpired/     แจ้งหมดเวลา
+│   ├── sender/
+│   │   ├── sender.go         interface Sender
+│   │   └── email/            implementation
+│   └── config/</code></pre>
+            </div>
+            <div>
+              <div class="label">จุดสำคัญ</div>
+              <ul>
+                <li>
+                  หนึ่ง slice = consume event + เตรียมข้อความ + เรียก
+                  <code>Sender</code>
+                </li>
+                <li>
+                  <code>Sender</code> fake ได้ตอน test
+                  และเพิ่มช่องทางใหม่ภายหลังได้
+                </li>
+                <li>
+                  consumer ต้อง idempotent เพราะ JetStream ส่งแบบ at-least-once
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="domain" id="partner-api">
+          <div class="domain-head">
+            <h3>partner-api</h3>
+            <span class="chip lay">Layered แบบบาง</span
+            ><span class="lang">Go</span>
+          </div>
+          <p>
+            ไม่มีกฎธุรกิจเป็นของตัวเอง รับ request ในรูปแบบของ partner แปลง
+            แล้วเรียก booking หรือ catalog ต่อ ถ้าใส่ domain layer จะเหลือแค่
+            struct ที่ copy field ไปมา
+          </p>
+          <div class="cols">
+            <div>
+              <div class="label">โครงโฟลเดอร์</div>
+              <pre><code>services/partner-api/
+├── cmd/server/main.go
+├── internal/
+│   ├── handler/   รับ + validate + แปลง contract
+│   ├── client/    booking, catalog
+│   └── config/</code></pre>
+            </div>
+            <div>
+              <div class="label">จุดสำคัญ</div>
+              <ul>
+                <li>flow: <code>handler → client</code></li>
+                <li>
+                  งานหลักอยู่ที่ security: API key, rate limit ที่ APISIX, input
+                  validation
+                </li>
+                <li>contract ของ partner ต้อง version แยกจาก API ภายใน</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="domain" id="bff">
+          <div class="domain-head">
+            <h3>GraphQL BFF</h3>
+            <span class="chip sli">Feature module</span
+            ><span class="lang">TypeScript</span>
+          </div>
+          <p>
+            เป็นแนว API Composition ไม่มี domain แต่ละ module รวม schema,
+            resolver และ DataLoader ของ feature นั้นไว้ด้วยกัน
+          </p>
+          <div class="cols">
+            <div>
+              <div class="label">โครงโฟลเดอร์</div>
+              <pre><code>apps/bff/src/
+├── modules/
+│   ├── events/
+│   │   ├── schema.graphql
+│   │   ├── resolvers.ts
+│   │   └── loaders.ts
+│   └── bookings/
+├── clients/     booking, catalog, payment
+└── server.ts</code></pre>
+            </div>
+            <div>
+              <div class="label">จุดสำคัญ</div>
+              <ul>
+                <li>DataLoader ลดปัญหา N+1 เมื่อรวมข้อมูลหลาย service</li>
+                <li>
+                  ถ้าหน้าใดช้าเพราะ join เยอะ ค่อยพิจารณา read model แบบ CQRS
+                </li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section>
+        <div class="eyebrow">กฎร่วม</div>
+        <h2>สิ่งที่ต้องเหมือนกันทุก service</h2>
+        <p>
+          ภายในต่างกันได้ แต่โครงด้านนอกต้องเหมือนกัน เพื่อให้ CI และฝั่ง ops
+          ไม่ต้องสนใจว่าข้างในเป็นแบบไหน
+        </p>
+        <ul>
+          <li>
+            <code>cmd/&lt;binary&gt;/main.go</code> เป็น composition root
+            ที่เดียวที่รู้จักทุก dependency
+          </li>
+          <li>
+            <code>internal/config</code>, รูปแบบการ log และการตั้ง OpenTelemetry
+            ใช้ร่วมจาก <code>libs/go</code>
+          </li>
+          <li>
+            <code>/healthz</code>, graceful shutdown, Dockerfile แบบ distroless
+            และ pipeline แบบเดียวกัน
+          </li>
+          <li>
+            <code>.golangci.yml</code> ชุดเดียวกัน เพิ่มกฎ depguard เฉพาะ
+            service ที่เป็น hexagonal
+          </li>
+          <li>
+            ห้ามแชร์ domain model ข้าม service ถ้าต้องแชร์ event payload ให้ใช้
+            schema ที่ version ไว้
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <div class="eyebrow">Hexagonal</div>
+        <h2>ทิศทาง import ที่ต้องรักษา</h2>
+        <div class="flow">
+          <span class="n">cmd</span><span class="a">→</span
+          ><span class="n">adapters</span><span class="a">→</span
+          ><span class="n">app</span><span class="a">→</span
+          ><span class="n">domain</span>
+        </div>
+        <p class="note">
+          <code>domain</code> ใช้ได้แค่ stdlib, <code>app</code> import ได้แค่
+          <code>domain</code>, ส่วน <code>cmd</code> เป็นที่เดียวที่รู้จัก
+          adapter ตัวจริง บังคับด้วย depguard ใน CI
+        </p>
+        <div class="tablebox">
+          <table>
+            <thead>
+              <tr>
+                <th>ข้อมูลรูปร่างไหน</th>
+                <th>อยู่ที่</th>
+                <th>ใครรู้จัก</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>request / response struct (มี json tag)</td>
+                <td><code>adapters/httpapi/dto.go</code></td>
+                <td>HTTP adapter</td>
+              </tr>
+              <tr>
+                <td>input ของ use case</td>
+                <td><code>app/&lt;usecase&gt;.go</code></td>
+                <td>app และ adapter ที่เรียก</td>
+              </tr>
+              <tr>
+                <td>aggregate</td>
+                <td><code>domain/</code></td>
+                <td>ทุกชั้น</td>
+              </tr>
+              <tr>
+                <td>row struct ของ DB</td>
+                <td><code>adapters/postgres/</code></td>
+                <td>Postgres adapter</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer>
+        เอกสารนี้สรุปการตัดสินใจ ณ วันที่อัปเดต การเลือกสามารถเปลี่ยนได้เมื่อ
+        domain ใดมีกฎเพิ่มขึ้น
+      </footer>
+    </div>
+  </body>
+</html>
