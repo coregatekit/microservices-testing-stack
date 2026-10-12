@@ -1,0 +1,1 @@
+# ขอ token (client credentials) + เรียก API ของ Partner
