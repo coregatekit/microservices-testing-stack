@@ -28,3 +28,8 @@ run = "uv run uvicorn mock_partner.webhook:app --reload --port 8091"
 description = "Run all scenario tests for the mock partner service"
 dir = "services/mock-partner"
 run = "uv run pytest scenarios -v"
+
+[tasks."mock:payment"]
+description = "Open mock payment provider service to handle payment requests"
+dir = "services/mock-payment-provider"
+run = "uv run uvicorn mock_payment.main:app --reload --port 8092"

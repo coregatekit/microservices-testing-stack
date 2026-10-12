@@ -1,0 +1,1 @@
+# เก็บ payment ไว้ใน memory (dict)
