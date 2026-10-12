@@ -1,0 +1,1680 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font:
+          14px -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #fff;
+        color: #000;
+      }
+      img {
+        max-width: 100%;
+      }
+      [hidden]:not([hidden="until-found" i]) {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <title>Catalog Service ERD</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap"
+    />
+    <style>
+      /* Layout: เอกสารคอลัมน์เดียว, diagram เต็มความกว้างแบบ drafting sheet, ตามด้วยตารางอ้างอิง */
+      :root {
+        --bg: #f6f7f9;
+        --sheet: #ffffff;
+        --ink: #1b2330;
+        --muted: #5d6878;
+        --line: #d7dce4;
+        --zebra: #f3f5f8;
+        --venue: #2f7a5f;
+        --venue-tint: #e6f2ec;
+        --event: #3550b8;
+        --event-tint: #e8ecfa;
+        --msg: #8a5a12;
+        --msg-tint: #f6eedf;
+        --logical: #b0463b;
+        --font-body: "IBM Plex Sans Thai", Tahoma, "Noto Sans Thai", sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #12161d;
+          --sheet: #191e27;
+          --ink: #e4e8ef;
+          --muted: #98a2b2;
+          --line: #2e3542;
+          --zebra: #1e2430;
+          --venue: #6cc6a0;
+          --venue-tint: #1c2e28;
+          --event: #8ea2ff;
+          --event-tint: #1f2540;
+          --msg: #e0b25e;
+          --msg-tint: #2e2717;
+          --logical: #f08a7e;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #12161d;
+        --sheet: #191e27;
+        --ink: #e4e8ef;
+        --muted: #98a2b2;
+        --line: #2e3542;
+        --zebra: #1e2430;
+        --venue: #6cc6a0;
+        --venue-tint: #1c2e28;
+        --event: #8ea2ff;
+        --event-tint: #1f2540;
+        --msg: #e0b25e;
+        --msg-tint: #2e2717;
+        --logical: #f08a7e;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-size: 15px;
+        line-height: 1.65;
+      }
+      .wrap {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding-inline: 20px;
+        padding-block: 40px 64px;
+        display: grid;
+        gap: 40px;
+      }
+      header {
+        display: grid;
+        gap: 8px;
+        max-width: 70ch;
+      }
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 38px);
+        line-height: 1.2;
+        font-weight: 700;
+        text-wrap: balance;
+      }
+      h2 {
+        margin: 0;
+        font-size: 21px;
+        font-weight: 600;
+        text-wrap: balance;
+      }
+      p {
+        margin: 0;
+      }
+      .lead {
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .meta b {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      section {
+        display: grid;
+        gap: 14px;
+        min-width: 0;
+      }
+      section > p {
+        max-width: 70ch;
+        color: var(--muted);
+      }
+      code,
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.88em;
+      }
+      code {
+        background: var(--zebra);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+
+      /* diagram sheet */
+      .sheet {
+        background: var(--sheet);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow-x: auto;
+      }
+      .sheet svg {
+        display: block;
+        width: 100%;
+        min-width: 980px;
+        height: auto;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 22px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sw {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        border: 2px solid;
+      }
+      .sw.venue {
+        border-color: var(--venue);
+        background: var(--venue-tint);
+      }
+      .sw.event {
+        border-color: var(--event);
+        background: var(--event-tint);
+      }
+      .sw.msg {
+        border-color: var(--msg);
+        background: var(--msg-tint);
+      }
+      .ln {
+        width: 28px;
+        height: 0;
+        border-top: 2px solid var(--muted);
+      }
+      .ln.logical {
+        border-top: 2px dashed var(--logical);
+      }
+
+      svg text {
+        font-family: var(--font-mono);
+      }
+      .agg-zone {
+        fill: none;
+        stroke-width: 1.2;
+        stroke-dasharray: 2 5;
+      }
+      .agg-zone.venue {
+        stroke: var(--venue);
+      }
+      .agg-zone.event {
+        stroke: var(--event);
+      }
+      .zone-l {
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        font-weight: 600;
+      }
+      .zone-l.venue {
+        fill: var(--venue);
+      }
+      .zone-l.event {
+        fill: var(--event);
+      }
+      .tb {
+        fill: var(--sheet);
+        stroke: var(--line);
+        stroke-width: 1.2;
+      }
+      .zebra {
+        fill: var(--zebra);
+      }
+      .agg-venue .th {
+        fill: var(--venue-tint);
+      }
+      .agg-venue .tb {
+        stroke: var(--venue);
+      }
+      .agg-event .th {
+        fill: var(--event-tint);
+      }
+      .agg-event .tb {
+        stroke: var(--event);
+      }
+      .agg-msg .th {
+        fill: var(--msg-tint);
+      }
+      .agg-msg .tb {
+        stroke: var(--msg);
+      }
+      .tt {
+        font-size: 13.5px;
+        font-weight: 600;
+        fill: var(--ink);
+      }
+      .cn {
+        font-size: 12px;
+        fill: var(--ink);
+      }
+      .cn.pk {
+        font-weight: 600;
+      }
+      .ct {
+        font-size: 11px;
+        fill: var(--muted);
+      }
+      .flag {
+        font-size: 9px;
+        font-weight: 600;
+        fill: var(--muted);
+      }
+      .flag.f-pk {
+        fill: var(--msg);
+      }
+      .flag.f-fk {
+        fill: var(--event);
+      }
+      .flag.f-uq {
+        fill: var(--venue);
+      }
+      .edge {
+        fill: none;
+        stroke: var(--muted);
+        stroke-width: 1.6;
+      }
+      .edge.logical {
+        stroke: var(--logical);
+        stroke-dasharray: 6 4;
+      }
+      .card {
+        font-size: 11px;
+        font-weight: 600;
+        fill: var(--ink);
+      }
+      .note {
+        font-size: 10.5px;
+        fill: var(--logical);
+      }
+
+      /* reference tables */
+      .tablewrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--sheet);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        min-width: 760px;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      th {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        background: var(--zebra);
+        white-space: nowrap;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td.rel {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      td.rel .arrow {
+        color: var(--muted);
+        padding-inline: 4px;
+      }
+      .card-pill {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 1px 8px;
+        border-radius: 999px;
+        background: var(--zebra);
+        border: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      .del {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      .del.cascade {
+        color: var(--logical);
+      }
+      .agg-tag {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+      }
+      .agg-tag.venue {
+        color: var(--venue);
+      }
+      .agg-tag.event {
+        color: var(--event);
+      }
+      .todo {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--logical);
+        border: 1px solid var(--logical);
+        border-radius: 4px;
+        padding: 0 6px;
+        margin-inline-start: 6px;
+      }
+      /* table explainers */
+      .group {
+        display: grid;
+        gap: 12px;
+      }
+      .group-h {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .group-h p {
+        color: var(--muted);
+        font-size: 14px;
+        max-width: 70ch;
+      }
+      .tables {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr));
+        gap: 14px;
+      }
+      .tdoc {
+        background: var(--sheet);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px 20px;
+        display: grid;
+        gap: 12px;
+        align-content: start;
+        min-width: 0;
+      }
+      .tdoc header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        max-width: none;
+      }
+      .tdoc h3 {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .tdoc.venue h3 {
+        color: var(--venue);
+      }
+      .tdoc.event h3 {
+        color: var(--event);
+      }
+      .tdoc.msg h3 {
+        color: var(--msg);
+      }
+      .tdoc .role {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .tdoc > p {
+        margin: 0;
+      }
+      .tdoc dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 7.5em 1fr;
+        gap: 8px 14px;
+        font-size: 14px;
+      }
+      .tdoc dt {
+        color: var(--muted);
+        font-size: 12.5px;
+        font-weight: 600;
+        padding-top: 1px;
+      }
+      .tdoc dd {
+        margin: 0;
+        min-width: 0;
+      }
+      .tdoc ul {
+        margin: 0;
+        padding-inline-start: 18px;
+        display: grid;
+        gap: 4px;
+      }
+      @media (max-width: 520px) {
+        .tdoc dl {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+        .tdoc dd {
+          margin-bottom: 8px;
+        }
+      }
+
+      /* walkthrough */
+      .trace {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0;
+        background: var(--sheet);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .trace li {
+        display: grid;
+        grid-template-columns: 2.2em minmax(0, 13em) minmax(0, 1fr);
+        gap: 4px 14px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--line);
+        align-items: baseline;
+      }
+      .trace li:last-child {
+        border-bottom: 0;
+      }
+      .trace .n {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .trace .t {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .trace .t.venue {
+        color: var(--venue);
+      }
+      .trace .t.event {
+        color: var(--event);
+      }
+      .trace .d {
+        font-size: 14px;
+      }
+      @media (max-width: 640px) {
+        .trace li {
+          grid-template-columns: 2em minmax(0, 1fr);
+        }
+        .trace .d {
+          grid-column: 2;
+        }
+      }
+      @media (max-width: 640px) {
+        .wrap {
+          padding-block: 24px 48px;
+          gap: 32px;
+        }
+      }
+
+      /* overview + glossary */
+      .overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+        gap: 14px;
+      }
+      .ov {
+        background: var(--sheet);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 18px;
+        display: grid;
+        gap: 8px;
+        align-content: start;
+        min-width: 0;
+      }
+      .ov h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .ov.venue h3 {
+        color: var(--venue);
+      }
+      .ov.event h3 {
+        color: var(--event);
+      }
+      .ov.msg h3 {
+        color: var(--msg);
+      }
+      .ov p {
+        margin: 0;
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+        overflow-wrap: anywhere;
+      }
+      .terms {
+        margin: 0;
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 10px 20px;
+        background: var(--sheet);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px 20px;
+        max-width: 900px;
+      }
+      .terms dt {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .terms dd {
+        margin: 0;
+        min-width: 0;
+      }
+      @media (max-width: 520px) {
+        .terms {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+        .terms dd {
+          margin-bottom: 10px;
+        }
+      }
+      .zone-l {
+        font-family: var(--font-body);
+      }
+    </style>
+
+    <div class="wrap">
+      <header>
+        <div class="eyebrow">
+          shop-lab · catalog-service · database
+          <span class="mono">catalog</span>
+        </div>
+        <h1>Catalog Service ERD</h1>
+        <p class="lead">
+          catalog service เก็บข้อมูลของ "สิ่งที่ขาย" ทั้งหมด คืองานอะไร
+          จัดที่ไหน มีกี่รอบ นั่งตรงไหนได้บ้าง และราคาเท่าไร
+          หน้านี้อธิบายว่าแต่ละตารางเก็บอะไร และเชื่อมกันอย่างไร
+        </p>
+        <div class="meta">
+          <span><b>9</b> ตาราง</span><span><b>2</b> กลุ่มข้อมูลหลัก</span
+          ><span><b>7</b> เส้นเชื่อมแบบ FK</span><span>PostgreSQL บน CNPG</span>
+        </div>
+      </header>
+
+      <section aria-labelledby="h-overview">
+        <h2 id="h-overview">ภาพรวมใน 1 นาที</h2>
+        <div class="overview">
+          <div class="ov venue">
+            <h3>กลุ่มสถานที่</h3>
+            <p>
+              บอกว่าสถานที่มีหน้าตาอย่างไร มีโซนอะไร และมีเก้าอี้ตัวไหนบ้าง
+              ข้อมูลกลุ่มนี้<b>ไม่รู้เรื่องราคา</b> และใช้ซ้ำได้กับหลายงาน
+            </p>
+            <p class="mono small">
+              venues → seat_maps → seat_map_sections → seat_map_seats
+            </p>
+          </div>
+          <div class="ov event">
+            <h3>กลุ่มงาน</h3>
+            <p>
+              บอกว่างานชื่ออะไร เปิดขายเมื่อไร มีรอบไหนบ้าง และโซนไหนราคาเท่าไร
+              กลุ่มนี้<b>หยิบผังที่นั่งจากกลุ่มสถานที่มาใช้</b>
+            </p>
+            <p class="mono small">
+              events → showtimes, ticket_tiers → tier_sections
+            </p>
+          </div>
+          <div class="ov msg">
+            <h3>กล่องจดหมายขาออก</h3>
+            <p>
+              ทุกครั้งที่งานเปลี่ยนสถานะ เช่น เปิดขายหรือยกเลิก
+              จะมีจดหมายหนึ่งฉบับลงในกล่องนี้ แล้วมีตัวส่งเอาไปแจ้ง service อื่น
+            </p>
+            <p class="mono small">outbox</p>
+          </div>
+        </div>
+        <p>
+          เทียบให้เห็นภาพ: กลุ่มสถานที่คือ<b>แบบแปลนโรงละคร</b>
+          ส่วนกลุ่มงานคือ<b>ใบประกาศขายตั๋ว</b>ที่เอาแบบแปลนนั้นมาระบายสีว่าโซนไหนราคาเท่าไร
+        </p>
+      </section>
+
+      <section aria-labelledby="h-terms">
+        <h2 id="h-terms">ศัพท์ที่ใช้ในหน้านี้</h2>
+        <dl class="terms">
+          <dt>PK</dt>
+          <dd>รหัสประจำแถว ห้ามซ้ำ เหมือนเลขบัตรประชาชนของข้อมูลแถวนั้น</dd>
+          <dt>FK</dt>
+          <dd>
+            ช่องที่เก็บรหัสของแถวในอีกตาราง เพื่อบอกว่า "แถวนี้เป็นของใคร"
+            database จะไม่ยอมให้ใส่รหัสที่ไม่มีอยู่จริง
+          </dd>
+          <dt>1 : N</dt>
+          <dd>
+            หนึ่งต่อหลาย เช่น งาน 1 งานมีได้หลายรอบ แต่รอบ 1 รอบเป็นของงานเดียว
+            ในภาพ เลข 1 อยู่ฝั่งแม่ ตัว N อยู่ฝั่งลูก
+          </dd>
+          <dt>ตารางแม่ / ลูก</dt>
+          <dd>
+            ตารางลูกคือตารางที่มี FK ชี้ไปหาตารางแม่ เช่น showtimes เป็นลูกของ
+            events
+          </dd>
+          <dt>DRAFT / LOCKED</dt>
+          <dd>
+            DRAFT คือยังร่างอยู่ แก้ได้ทุกอย่าง LOCKED คือถูกล็อกแล้ว
+            แก้ไม่ได้อีก
+          </dd>
+          <dt>version</dt>
+          <dd>
+            ตัวเลขที่บวกเพิ่มทุกครั้งที่ข้อมูลงานเปลี่ยน
+            ใช้เช็กว่าข้อมูลที่ถืออยู่ใหม่หรือเก่า
+          </dd>
+        </dl>
+      </section>
+
+      <section aria-labelledby="h-diagram">
+        <h2 id="h-diagram">ภาพความเชื่อมโยง</h2>
+        <p>
+          แต่ละกล่องคือหนึ่งตาราง เส้นทึบคือการเชื่อมที่ database ตรวจให้ (FK)
+          เส้นประสีแดงคือการเชื่อมที่ database ไม่ได้ตรวจ
+          แต่ระบบตรวจเองในจังหวะอื่น
+        </p>
+        <div class="legend">
+          <span><i class="sw venue"></i>กลุ่มสถานที่</span>
+          <span><i class="sw event"></i>กลุ่มงาน</span>
+          <span><i class="sw msg"></i>กล่องจดหมายขาออก</span>
+          <span><i class="ln"></i>เชื่อมแบบ FK</span>
+          <span><i class="ln logical"></i>เชื่อมแบบไม่มี FK</span>
+          <span class="mono">UQ = ค่าห้ามซ้ำ</span>
+        </div>
+        <div class="sheet">
+          <svg
+            viewBox="0 0 1200 790"
+            role="img"
+            aria-labelledby="erd-t"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <title id="erd-t">ER diagram ของ catalog service</title>
+            <rect
+              class="agg-zone venue"
+              x="8"
+              y="12"
+              width="330"
+              height="770"
+              rx="10"
+            />
+            <path
+              class="agg-zone event"
+              d="M452 22a10 10 0 0 1 10 -10h720a10 10 0 0 1 10 10v640a10 10 0 0 1 -10 10h-292v-150h-438z"
+            />
+            <text class="zone-l venue" x="22" y="30">กลุ่มสถานที่</text>
+            <text class="zone-l event" x="1178" y="30" text-anchor="end">
+              กลุ่มงาน
+            </text>
+            <path class="edge fk" d="M170 240 V190" />
+            <text class="card" x="178" y="234">N</text>
+            <text class="card" x="178" y="204">1</text>
+            <path class="edge fk" d="M170 440 V390" />
+            <text class="card" x="178" y="434">N</text>
+            <text class="card" x="178" y="404">1</text>
+            <path class="edge fk" d="M170 600 V546" />
+            <text class="card" x="178" y="594">N</text>
+            <text class="card" x="178" y="560">1</text>
+            <path class="edge fk" d="M470 309 H300" />
+            <text class="card" x="456" y="303">N</text>
+            <text class="card" x="308" y="303">1</text>
+            <path class="edge fk" d="M730 265 H815 V83 H900" />
+            <text class="card" x="738" y="259">N</text>
+            <text class="card" x="886" y="77">1</text>
+            <path class="edge fk" d="M1030 360 V300" />
+            <text class="card" x="1038" y="354">N</text>
+            <text class="card" x="1038" y="314">1</text>
+            <path class="edge fk" d="M1030 540 V488" />
+            <text class="card" x="1038" y="534">N</text>
+            <text class="card" x="1038" y="502">1</text>
+            <path class="edge logical" d="M960 646 V770 H20 V505 H40" />
+            <text class="card" x="968" y="662">N</text>
+            <text class="card" x="26" y="499">N</text>
+            <path class="edge logical" d="M730 625 H870 V280 H900" />
+            <text class="card" x="738" y="619">N</text>
+            <text class="card" x="886" y="274">1</text>
+            <text class="note" x="310" y="326">composite FK</text>
+            <text class="note" x="400" y="762">
+              เชื่อมด้วยชื่อโซน ตรวจตอนประกาศงาน
+            </text>
+            <text class="note" x="740" y="642">ระบุงาน แต่ไม่มี FK</text>
+            <g class="tbl agg-venue">
+              <rect class="tb" x="40" y="40" width="260" height="150" rx="6" />
+              <path
+                class="th"
+                d="M40 46a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="52" y="61">venues</text>
+              <text class="flag f-pk" x="52" y="87">PK</text>
+              <text class="cn pk" x="96" y="87">venue_id</text>
+              <text class="ct" x="288" y="87" text-anchor="end">uuid</text>
+              <rect class="zebra" x="41" y="94" width="258" height="22" />
+              <text class="cn" x="96" y="109">organizer_id</text>
+              <text class="ct" x="288" y="109" text-anchor="end">text</text>
+              <text class="cn" x="96" y="131">name</text>
+              <text class="ct" x="288" y="131" text-anchor="end">text</text>
+              <rect class="zebra" x="41" y="138" width="258" height="22" />
+              <text class="cn" x="96" y="153">address</text>
+              <text class="ct" x="288" y="153" text-anchor="end">text</text>
+              <text class="cn" x="96" y="175">timezone</text>
+              <text class="ct" x="288" y="175" text-anchor="end">text</text>
+            </g>
+            <g class="tbl agg-venue">
+              <rect class="tb" x="40" y="240" width="260" height="150" rx="6" />
+              <path
+                class="th"
+                d="M40 246a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="52" y="261">seat_maps</text>
+              <text class="flag f-pk" x="52" y="287">PK</text>
+              <text class="cn pk" x="96" y="287">seat_map_id</text>
+              <text class="ct" x="288" y="287" text-anchor="end">uuid</text>
+              <rect class="zebra" x="41" y="294" width="258" height="22" />
+              <text class="flag f-fk" x="52" y="309">FK</text>
+              <text class="cn" x="96" y="309">venue_id</text>
+              <text class="ct" x="288" y="309" text-anchor="end">uuid</text>
+              <text class="flag f-uq" x="52" y="331">UQ</text>
+              <text class="cn" x="96" y="331">version</text>
+              <text class="ct" x="288" y="331" text-anchor="end">int</text>
+              <rect class="zebra" x="41" y="338" width="258" height="22" />
+              <text class="cn" x="96" y="353">status</text>
+              <text class="ct" x="288" y="353" text-anchor="end">
+                DRAFT | LOCKED
+              </text>
+              <text class="cn" x="96" y="375">locked_at</text>
+              <text class="ct" x="288" y="375" text-anchor="end">
+                timestamptz
+              </text>
+            </g>
+            <g class="tbl agg-venue">
+              <rect class="tb" x="40" y="440" width="260" height="106" rx="6" />
+              <path
+                class="th"
+                d="M40 446a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="52" y="461">seat_map_sections</text>
+              <text class="flag f-pk" x="52" y="487">PK</text>
+              <text class="flag f-fk" x="72" y="487">FK</text>
+              <text class="cn pk" x="96" y="487">seat_map_id</text>
+              <text class="ct" x="288" y="487" text-anchor="end">uuid</text>
+              <rect class="zebra" x="41" y="494" width="258" height="22" />
+              <text class="flag f-pk" x="52" y="509">PK</text>
+              <text class="cn pk" x="96" y="509">section_code</text>
+              <text class="ct" x="288" y="509" text-anchor="end">text</text>
+              <text class="cn" x="96" y="531">name</text>
+              <text class="ct" x="288" y="531" text-anchor="end">text</text>
+            </g>
+            <g class="tbl agg-venue">
+              <rect class="tb" x="40" y="600" width="260" height="150" rx="6" />
+              <path
+                class="th"
+                d="M40 606a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="52" y="621">seat_map_seats</text>
+              <text class="flag f-pk" x="52" y="647">PK</text>
+              <text class="flag f-fk" x="72" y="647">FK</text>
+              <text class="cn pk" x="96" y="647">seat_map_id</text>
+              <text class="ct" x="288" y="647" text-anchor="end">uuid</text>
+              <rect class="zebra" x="41" y="654" width="258" height="22" />
+              <text class="flag f-pk" x="52" y="669">PK</text>
+              <text class="cn pk" x="96" y="669">seat_id</text>
+              <text class="ct" x="288" y="669" text-anchor="end">text</text>
+              <text class="flag f-fk" x="52" y="691">FK</text>
+              <text class="cn" x="96" y="691">section_code</text>
+              <text class="ct" x="288" y="691" text-anchor="end">text</text>
+              <rect class="zebra" x="41" y="698" width="258" height="22" />
+              <text class="flag f-uq" x="52" y="713">UQ</text>
+              <text class="cn" x="96" y="713">row_label</text>
+              <text class="ct" x="288" y="713" text-anchor="end">text</text>
+              <text class="flag f-uq" x="52" y="735">UQ</text>
+              <text class="cn" x="96" y="735">seat_number</text>
+              <text class="ct" x="288" y="735" text-anchor="end">int</text>
+            </g>
+            <g class="tbl agg-event">
+              <rect
+                class="tb"
+                x="470"
+                y="200"
+                width="260"
+                height="172"
+                rx="6"
+              />
+              <path
+                class="th"
+                d="M470 206a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="482" y="221">showtimes</text>
+              <text class="flag f-pk" x="482" y="247">PK</text>
+              <text class="cn pk" x="526" y="247">showtime_id</text>
+              <text class="ct" x="718" y="247" text-anchor="end">uuid</text>
+              <rect class="zebra" x="471" y="254" width="258" height="22" />
+              <text class="flag f-fk" x="482" y="269">FK</text>
+              <text class="cn" x="526" y="269">event_id</text>
+              <text class="ct" x="718" y="269" text-anchor="end">uuid</text>
+              <text class="flag f-fk" x="482" y="291">FK</text>
+              <text class="cn" x="526" y="291">venue_id</text>
+              <text class="ct" x="718" y="291" text-anchor="end">uuid</text>
+              <rect class="zebra" x="471" y="298" width="258" height="22" />
+              <text class="flag f-fk" x="482" y="313">FK</text>
+              <text class="cn" x="526" y="313">seat_map_id</text>
+              <text class="ct" x="718" y="313" text-anchor="end">uuid</text>
+              <text class="flag f-uq" x="482" y="335">UQ</text>
+              <text class="cn" x="526" y="335">starts_at</text>
+              <text class="ct" x="718" y="335" text-anchor="end">
+                timestamptz
+              </text>
+              <rect class="zebra" x="471" y="342" width="258" height="22" />
+              <text class="cn" x="526" y="357">ends_at</text>
+              <text class="ct" x="718" y="357" text-anchor="end">
+                timestamptz
+              </text>
+            </g>
+            <g class="tbl agg-event">
+              <rect class="tb" x="900" y="40" width="260" height="260" rx="6" />
+              <path
+                class="th"
+                d="M900 46a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="912" y="61">events</text>
+              <text class="flag f-pk" x="912" y="87">PK</text>
+              <text class="cn pk" x="956" y="87">event_id</text>
+              <text class="ct" x="1148" y="87" text-anchor="end">uuid</text>
+              <rect class="zebra" x="901" y="94" width="258" height="22" />
+              <text class="cn" x="956" y="109">organizer_id</text>
+              <text class="ct" x="1148" y="109" text-anchor="end">text</text>
+              <text class="cn" x="956" y="131">title</text>
+              <text class="ct" x="1148" y="131" text-anchor="end">text</text>
+              <rect class="zebra" x="901" y="138" width="258" height="22" />
+              <text class="cn" x="956" y="153">status</text>
+              <text class="ct" x="1148" y="153" text-anchor="end">text</text>
+              <text class="cn" x="956" y="175">currency</text>
+              <text class="ct" x="1148" y="175" text-anchor="end">char(3)</text>
+              <rect class="zebra" x="901" y="182" width="258" height="22" />
+              <text class="cn" x="956" y="197">sales_open_at</text>
+              <text class="ct" x="1148" y="197" text-anchor="end">
+                timestamptz
+              </text>
+              <text class="cn" x="956" y="219">sales_close_at</text>
+              <text class="ct" x="1148" y="219" text-anchor="end">
+                timestamptz
+              </text>
+              <rect class="zebra" x="901" y="226" width="258" height="22" />
+              <text class="cn" x="956" y="241">max_tickets_per_user</text>
+              <text class="ct" x="1148" y="241" text-anchor="end">int2</text>
+              <text class="cn" x="956" y="263">version</text>
+              <text class="ct" x="1148" y="263" text-anchor="end">bigint</text>
+              <rect class="zebra" x="901" y="270" width="258" height="22" />
+              <text class="cn" x="956" y="285">
+                cancelled_* / cancel_reason
+              </text>
+            </g>
+            <g class="tbl agg-event">
+              <rect
+                class="tb"
+                x="900"
+                y="360"
+                width="260"
+                height="128"
+                rx="6"
+              />
+              <path
+                class="th"
+                d="M900 366a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="912" y="381">ticket_tiers</text>
+              <text class="flag f-pk" x="912" y="407">PK</text>
+              <text class="flag f-fk" x="932" y="407">FK</text>
+              <text class="cn pk" x="956" y="407">event_id</text>
+              <text class="ct" x="1148" y="407" text-anchor="end">uuid</text>
+              <rect class="zebra" x="901" y="414" width="258" height="22" />
+              <text class="flag f-pk" x="912" y="429">PK</text>
+              <text class="cn pk" x="956" y="429">tier_code</text>
+              <text class="ct" x="1148" y="429" text-anchor="end">text</text>
+              <text class="cn" x="956" y="451">name</text>
+              <text class="ct" x="1148" y="451" text-anchor="end">text</text>
+              <rect class="zebra" x="901" y="458" width="258" height="22" />
+              <text class="cn" x="956" y="473">price_minor</text>
+              <text class="ct" x="1148" y="473" text-anchor="end">bigint</text>
+            </g>
+            <g class="tbl agg-event">
+              <rect
+                class="tb"
+                x="900"
+                y="540"
+                width="260"
+                height="106"
+                rx="6"
+              />
+              <path
+                class="th"
+                d="M900 546a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="912" y="561">tier_sections</text>
+              <text class="flag f-pk" x="912" y="587">PK</text>
+              <text class="flag f-fk" x="932" y="587">FK</text>
+              <text class="cn pk" x="956" y="587">event_id</text>
+              <text class="ct" x="1148" y="587" text-anchor="end">uuid</text>
+              <rect class="zebra" x="901" y="594" width="258" height="22" />
+              <text class="flag f-pk" x="912" y="609">PK</text>
+              <text class="cn pk" x="956" y="609">section_code</text>
+              <text class="ct" x="1148" y="609" text-anchor="end">text</text>
+              <text class="flag f-fk" x="912" y="631">FK</text>
+              <text class="cn" x="956" y="631">tier_code</text>
+              <text class="ct" x="1148" y="631" text-anchor="end">text</text>
+            </g>
+            <g class="tbl agg-msg">
+              <rect
+                class="tb"
+                x="470"
+                y="560"
+                width="260"
+                height="172"
+                rx="6"
+              />
+              <path
+                class="th"
+                d="M470 566a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
+              />
+              <text class="tt" x="482" y="581">outbox</text>
+              <text class="flag f-pk" x="482" y="607">PK</text>
+              <text class="cn pk" x="526" y="607">event_id</text>
+              <text class="ct" x="718" y="607" text-anchor="end">uuid</text>
+              <rect class="zebra" x="471" y="614" width="258" height="22" />
+              <text class="cn" x="526" y="629">aggregate_id</text>
+              <text class="ct" x="718" y="629" text-anchor="end">uuid</text>
+              <text class="cn" x="526" y="651">aggregate_version</text>
+              <text class="ct" x="718" y="651" text-anchor="end">bigint</text>
+              <rect class="zebra" x="471" y="658" width="258" height="22" />
+              <text class="cn" x="526" y="673">event_type</text>
+              <text class="ct" x="718" y="673" text-anchor="end">text</text>
+              <text class="cn" x="526" y="695">payload</text>
+              <text class="ct" x="718" y="695" text-anchor="end">jsonb</text>
+              <rect class="zebra" x="471" y="702" width="258" height="22" />
+              <text class="cn" x="526" y="717">published_at</text>
+              <text class="ct" x="718" y="717" text-anchor="end">
+                timestamptz
+              </text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-trace">
+        <h2 id="h-trace">ตัวอย่าง: เก้าอี้ A-12 ราคาเท่าไร</h2>
+        <p>
+          ลองถามคำถามง่ายๆ ว่า "เก้าอี้ A-12 ในรอบคืนวันเสาร์ ราคาเท่าไร"
+          ระบบต้องเดินผ่านตารางตามลำดับนี้ถึงจะตอบได้
+        </p>
+        <ol class="trace">
+          <li>
+            <span class="n">1</span><span class="t event">showtimes</span
+            ><span class="d"
+              >หารอบคืนวันเสาร์ ได้คำตอบว่ารอบนี้เป็นของงานคอนเสิร์ต X
+              และใช้ผังที่นั่งแบบที่ 2 ของ Hall A</span
+            >
+          </li>
+          <li>
+            <span class="n">2</span><span class="t venue">seat_maps</span
+            ><span class="d"
+              >เปิดผังแบบที่ 2 ผังนี้ถูกล็อกแล้ว ไม่มีใครแก้ได้ระหว่างขาย</span
+            >
+          </li>
+          <li>
+            <span class="n">3</span><span class="t venue">seat_map_seats</span
+            ><span class="d"
+              >ในผังนี้ A-12 คือแถว A เก้าอี้ตัวที่ 12 อยู่ในโซน A</span
+            >
+          </li>
+          <li>
+            <span class="n">4</span><span class="t event">tier_sections</span
+            ><span class="d">งานคอนเสิร์ต X กำหนดว่าโซน A เป็นระดับ VIP</span>
+          </li>
+          <li>
+            <span class="n">5</span><span class="t event">ticket_tiers</span
+            ><span class="d">VIP ของงานนี้ราคา 5,000 บาท</span>
+          </li>
+          <li>
+            <span class="n">6</span><span class="t event">events</span
+            ><span class="d"
+              >เช็กว่างานกำลังเปิดขายอยู่จริง
+              ถ้ายังไม่เปิดหรือยกเลิกไปแล้วจะขายไม่ได้</span
+            >
+          </li>
+        </ol>
+        <p>
+          สังเกตว่าราคาไม่ได้ติดอยู่กับเก้าอี้ แต่มาจากการจับคู่ "โซน" กับ
+          "ระดับราคา" ของแต่ละงาน งานอื่นที่ใช้ผังเดียวกันจึงตั้งราคาโซน A
+          ต่างไปได้
+        </p>
+      </section>
+
+      <section aria-labelledby="h-tables">
+        <h2 id="h-tables">แต่ละตารางเก็บอะไร</h2>
+
+        <div class="group">
+          <div class="group-h">
+            <span class="agg-tag venue">กลุ่มสถานที่</span>
+            <p>สร้างครั้งเดียว ใช้ได้หลายงาน</p>
+          </div>
+          <div class="tables">
+            <article class="tdoc venue">
+              <header>
+                <h3>venues</h3>
+                <span class="role">สถานที่จัดงาน</span>
+              </header>
+              <p>
+                เก็บชื่อสถานที่ ที่อยู่ และเขตเวลา (เอาไว้แสดงเวลารอบให้ถูก)
+              </p>
+              <dl>
+                <dt>ตัวอย่าง</dt>
+                <dd>Hall A, ถนนพระราม 9, Asia/Bangkok</dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  หนึ่งสถานที่มีผังที่นั่งได้หลายแบบ (<code>seat_maps</code>)
+                </dd>
+                <dt>กฎสำคัญ</dt>
+                <dd>
+                  สถานที่เป็นของ organizer คนที่สร้าง
+                  คนอื่นแก้หรือเอาไปใช้ในงานของตัวเองไม่ได้
+                </dd>
+              </dl>
+            </article>
+
+            <article class="tdoc venue">
+              <header>
+                <h3>seat_maps</h3>
+                <span class="role">แบบผังที่นั่ง</span>
+              </header>
+              <p>
+                ผังที่นั่งของสถานที่ แต่ละแบบมีเลขรุ่น เช่น ปีนี้จัดเวทีกลาง
+                ปีหน้าย้ายเวทีไปด้านหน้า ก็เป็นผังแบบที่ 1 กับแบบที่ 2
+              </p>
+              <dl>
+                <dt>ตัวอย่าง</dt>
+                <dd>Hall A แบบที่ 2, สถานะ LOCKED</dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  เป็นของ <code>venues</code> หนึ่งแห่ง ข้างในแบ่งเป็นโซน
+                  (<code>seat_map_sections</code>) และถูกรอบการแสดง
+                  (<code>showtimes</code>) หยิบไปใช้
+                </dd>
+                <dt>กฎสำคัญ</dt>
+                <dd>
+                  พองานที่ใช้ผังนี้ประกาศขาย ผังจะถูกล็อกทันที ห้ามเพิ่ม ลบ
+                  หรือย้ายเก้าอี้ ถ้าอยากเปลี่ยนต้องคัดลอกเป็นแบบใหม่
+                  เพื่อให้ตั๋วที่ขายไปแล้วยังชี้ไปที่เก้าอี้ที่มีอยู่จริงเสมอ
+                </dd>
+              </dl>
+            </article>
+
+            <article class="tdoc venue">
+              <header>
+                <h3>seat_map_sections</h3>
+                <span class="role">โซนในผัง</span>
+              </header>
+              <p>
+                แบ่งผังเป็นโซน เช่น โซน A ด้านหน้า โซน C ด้านหลัง
+                โซนคือหน่วยที่ใช้ตั้งราคา
+              </p>
+              <dl>
+                <dt>ตัวอย่าง</dt>
+                <dd>A (ด้านหน้าซ้าย), B (ด้านหน้าขวา), C, D</dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  อยู่ในผัง (<code>seat_maps</code>) หนึ่งแบบ
+                  ข้างในมีเก้าอี้หลายตัว (<code>seat_map_seats</code>)
+                </dd>
+                <dt>กฎสำคัญ</dt>
+                <dd>
+                  ในผังเดียวกันชื่อโซนห้ามซ้ำ แต่ผังคนละแบบมีโซน A เหมือนกันได้
+                </dd>
+              </dl>
+            </article>
+
+            <article class="tdoc venue">
+              <header>
+                <h3>seat_map_seats</h3>
+                <span class="role">เก้าอี้ทุกตัว</span>
+              </header>
+              <p>
+                เก้าอี้แต่ละตัวในผัง มีรหัส (เช่น A-12) ไว้ให้ระบบใช้
+                และมีแถวกับเลขที่นั่งไว้ให้คนอ่าน ตารางนี้มีข้อมูลเยอะที่สุด
+                ผังหนึ่งมีได้หลายพันตัว
+              </p>
+              <dl>
+                <dt>ตัวอย่าง</dt>
+                <dd>A-12 = โซน A, แถว A, ที่นั่งที่ 12</dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  อยู่ในโซน (<code>seat_map_sections</code>) หนึ่งโซน
+                  และโซนนั้นต้องอยู่ในผังเดียวกันกับเก้าอี้
+                </dd>
+                <dt>ใช้ต่อที่</dt>
+                <dd>
+                  booking service คัดลอกรายการเก้าอี้ไปตอนเปิดขาย
+                  เพื่อเอาไปนับว่าตัวไหนว่าง ตัวไหนขายแล้ว
+                </dd>
+                <dt>กฎสำคัญ</dt>
+                <dd>แถวเดียวกันมีที่นั่งเลขซ้ำกันไม่ได้</dd>
+              </dl>
+            </article>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-h">
+            <span class="agg-tag event">กลุ่มงาน</span>
+            <p>
+              ข้อมูลของการขายแต่ละครั้ง ทุกการเปลี่ยนแปลงในกลุ่มนี้ทำให้ version
+              ของงานเพิ่มขึ้น 1
+            </p>
+          </div>
+          <div class="tables">
+            <article class="tdoc event">
+              <header>
+                <h3>events</h3>
+                <span class="role">งาน (ตารางหลัก)</span>
+              </header>
+              <p>
+                หนึ่งแถวคือหนึ่งงาน เก็บชื่องาน สถานะ ช่วงเวลาเปิดขาย สกุลเงิน
+                และจำนวนตั๋วสูงสุดที่คนหนึ่งซื้อได้ต่อรอบ
+              </p>
+              <dl>
+                <dt>ตัวอย่าง</dt>
+                <dd>
+                  คอนเสิร์ต X, เปิดขาย 1 พ.ย. ปิดขาย 30 พ.ย., THB, คนละไม่เกิน 4
+                  ใบ
+                </dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  มีรอบหลายรอบ (<code>showtimes</code>) และมีระดับราคาหลายระดับ
+                  (<code>ticket_tiers</code>)
+                </dd>
+                <dt>สถานะ</dt>
+                <dd>
+                  ร่าง → ประกาศแล้ว → เปิดขาย → ขายหมด / ปิดขาย →
+                  (ยกเลิกได้ทุกช่วง) เดินย้อนกลับไม่ได้
+                </dd>
+                <dt>กฎสำคัญ</dt>
+                <dd>
+                  <ul>
+                    <li>
+                      ช่วงเปิดขาย สกุลเงิน
+                      และจำนวนตั๋วต่อคนแก้ได้ตอนเป็นร่างเท่านั้น
+                    </li>
+                    <li>เจ้าของงานเปลี่ยนไม่ได้</li>
+                    <li>
+                      ยกเลิกแล้วแก้อะไรไม่ได้อีก และลบได้เฉพาะงานที่ยังเป็นร่าง
+                    </li>
+                  </ul>
+                </dd>
+              </dl>
+            </article>
+
+            <article class="tdoc event">
+              <header>
+                <h3>showtimes</h3>
+                <span class="role">รอบการแสดง</span>
+              </header>
+              <p>
+                แต่ละรอบของงาน บอกวันเวลา สถานที่ และผังที่นั่งที่ใช้
+                เป็นตารางเดียวที่<b>เชื่อมกลุ่มงานกับกลุ่มสถานที่เข้าหากัน</b>
+              </p>
+              <dl>
+                <dt>ตัวอย่าง</dt>
+                <dd>
+                  คืนวันศุกร์ 19:00 กับคืนวันเสาร์ 19:00 ที่ Hall A ผังแบบที่ 2
+                </dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  เป็นของงาน (<code>events</code>) หนึ่งงาน และใช้ผัง
+                  (<code>seat_maps</code>) หนึ่งแบบ
+                </dd>
+                <dt>กฎสำคัญ</dt>
+                <dd>
+                  <ul>
+                    <li>
+                      ผังที่เลือกต้องเป็นของสถานที่เดียวกับรอบ database ตรวจให้
+                    </li>
+                    <li>
+                      เพิ่มหรือลบรอบได้ตอนเป็นร่างเท่านั้น
+                      หลังประกาศแล้วทำได้แค่เลื่อนเวลา
+                    </li>
+                    <li>เวลาใหม่ต้องอยู่ในอนาคต และไม่ก่อนวันปิดขาย</li>
+                  </ul>
+                </dd>
+              </dl>
+            </article>
+
+            <article class="tdoc event">
+              <header>
+                <h3>ticket_tiers</h3>
+                <span class="role">ระดับราคา</span>
+              </header>
+              <p>
+                ระดับราคาของงาน เช่น VIP กับ Regular
+                ราคาใช้เท่ากันทุกรอบของงานนั้น เก็บเป็นสตางค์ (5,000 บาท
+                เก็บเป็น 500000) เพื่อไม่ให้มีปัญหาทศนิยม
+              </p>
+              <dl>
+                <dt>ตัวอย่าง</dt>
+                <dd>VIP 5,000 บาท, REG 2,000 บาท</dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  เป็นของงาน (<code>events</code>) และจับคู่กับโซนผ่าน
+                  <code>tier_sections</code>
+                </dd>
+                <dt>กฎสำคัญ</dt>
+                <dd>
+                  แก้ราคาได้จนถึงก่อนเปิดขาย พอเปิดขายแล้วราคาถูกล็อก
+                  คนที่จองไปแล้วจะจ่ายราคาที่เห็นตอนจองเสมอ เพราะ booking
+                  จดราคาเก็บไว้เอง
+                </dd>
+                <dt>ไม่มี</dt>
+                <dd>
+                  จำนวนตั๋วของแต่ละระดับ
+                  เพราะนับได้จากจำนวนเก้าอี้ในโซนที่จับคู่ไว้
+                </dd>
+              </dl>
+            </article>
+
+            <article class="tdoc event">
+              <header>
+                <h3>tier_sections</h3>
+                <span class="role">จับคู่โซนกับราคา</span>
+              </header>
+              <p>
+                ตารางสั้นๆ ที่บอกว่าโซนไหนได้ราคาระดับไหน เช่น "โซน A และ B เป็น
+                VIP" เก้าอี้ทุกตัวจึงมีราคาโดยไม่ต้องตั้งทีละตัว
+              </p>
+              <dl>
+                <dt>ตัวอย่าง</dt>
+                <dd>A → VIP, B → VIP, C → REG, D → REG</dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  ชี้ไปที่ระดับราคา (<code>ticket_tiers</code>)
+                  และชี้ไปที่ชื่อโซน (<code>seat_map_sections</code>)
+                  โดยฝั่งโซนไม่มี FK เพราะงานหนึ่งอาจมีหลายรอบที่ใช้ผังต่างกัน
+                </dd>
+                <dt>กฎสำคัญ</dt>
+                <dd>
+                  <ul>
+                    <li>หนึ่งโซนได้ราคาเดียวในงานหนึ่ง</li>
+                    <li>
+                      ก่อนประกาศงาน ทุกโซนต้องมีราคา และทุกระดับราคาต้องมีโซน
+                      ไม่อย่างนั้นประกาศไม่ผ่าน
+                    </li>
+                  </ul>
+                </dd>
+                <dt>ทำไมอยู่กลุ่มงาน</dt>
+                <dd>
+                  ผังเดียวกันใช้ได้หลายงาน งานหนึ่งอาจให้โซน B เป็น VIP
+                  อีกงานให้เป็น Regular การจับคู่จึงต้องเป็นของงาน
+                </dd>
+              </dl>
+            </article>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-h">
+            <span class="agg-tag" style="color: var(--msg)"
+              >กล่องจดหมายขาออก</span
+            >
+            <p>ไม่ได้เก็บข้อมูลงาน เป็นทางส่งข่าวไปหา service อื่น</p>
+          </div>
+          <div class="tables">
+            <article class="tdoc msg">
+              <header>
+                <h3>outbox</h3>
+                <span class="role">จดหมายที่รอส่ง</span>
+              </header>
+              <p>
+                ทุกครั้งที่งานถูกประกาศ เปิดขาย เลื่อนรอบ หรือยกเลิก
+                ระบบจะเขียนจดหมายหนึ่งฉบับลงตารางนี้
+                <b>พร้อมกับ</b>การเปลี่ยนข้อมูลงาน
+                แล้วมีตัวส่งคอยหยิบจดหมายไปส่งเข้า NATS ให้ booking, partner-api
+                และ notification
+              </p>
+              <dl>
+                <dt>ทำไมต้องมี</dt>
+                <dd>
+                  ถ้าเปลี่ยนข้อมูลงานแล้วส่งข่าวตรงๆ
+                  อาจเกิดกรณีที่ข้อมูลเปลี่ยนแล้วแต่ข่าวส่งไม่ถึง เช่น
+                  งานถูกยกเลิกแต่ booking ยังขายต่อ การเขียนลงตารางพร้อมกันทำให้
+                  "ข้อมูลเปลี่ยน" กับ "มีข่าวรอส่ง" เกิดคู่กันเสมอ
+                </dd>
+                <dt>เชื่อมกับ</dt>
+                <dd>
+                  จดหมายแต่ละฉบับระบุว่าเป็นของงานไหน
+                  (<code>aggregate_id</code>) แต่ไม่มี FK
+                  เพราะต้องเก็บไว้แม้งานจะถูกลบ
+                </dd>
+                <dt>ประเภทจดหมาย</dt>
+                <dd>
+                  EventPublished, SalesOpened, ShowtimeRescheduled,
+                  EventCancelled
+                </dd>
+                <dt>ข้อควรรู้</dt>
+                <dd>
+                  ข่าวอาจถูกส่งซ้ำได้ แต่ไม่หาย
+                  ฝั่งที่รับจึงต้องเช็กว่าเคยรับฉบับนี้แล้วหรือยัง
+                </dd>
+                <dt>ยังขาด</dt>
+                <dd>
+                  งานลบจดหมายที่ส่งไปนานแล้ว เช่น เกิน 7 วัน
+                  ไม่อย่างนั้นตารางจะโตไปเรื่อยๆ
+                </dd>
+              </dl>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-fk">
+        <h2 id="h-fk">เส้นเชื่อมทั้งหมด</h2>
+        <p>
+          ตารางนี้สรุปเส้นทึบทุกเส้นในภาพ ช่อง "ถ้าลบแม่"
+          บอกว่าถ้าลบแถวในตารางแม่ แถวลูกจะเป็นอย่างไร
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ลูก → แม่</th>
+                <th>แบบ</th>
+                <th>ถ้าลบแม่</th>
+                <th>อ่านว่า</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="rel">
+                  seat_maps <span class="arrow">→</span> venues
+                </td>
+                <td><span class="card-pill">N : 1</span></td>
+                <td class="del">ห้ามลบ ถ้ายังมีผัง</td>
+                <td>สถานที่หนึ่งมีผังได้หลายแบบ</td>
+              </tr>
+              <tr>
+                <td class="rel">
+                  seat_map_sections <span class="arrow">→</span> seat_maps
+                </td>
+                <td><span class="card-pill">N : 1</span></td>
+                <td class="del cascade">โซนหายตาม</td>
+                <td>ผังหนึ่งมีหลายโซน (ผังที่ล็อกแล้วลบไม่ได้อยู่แล้ว)</td>
+              </tr>
+              <tr>
+                <td class="rel">
+                  seat_map_seats <span class="arrow">→</span> seat_map_sections
+                </td>
+                <td><span class="card-pill">N : 1</span></td>
+                <td class="del cascade">เก้าอี้หายตาม</td>
+                <td>
+                  โซนหนึ่งมีเก้าอี้หลายตัว และเก้าอี้ต้องอยู่ในโซนของผังเดียวกัน
+                </td>
+              </tr>
+              <tr>
+                <td class="rel">
+                  showtimes <span class="arrow">→</span> events
+                </td>
+                <td><span class="card-pill">N : 1</span></td>
+                <td class="del cascade">รอบหายตาม</td>
+                <td>งานหนึ่งมีหลายรอบ ลบงานได้เฉพาะตอนเป็นร่าง</td>
+              </tr>
+              <tr>
+                <td class="rel">
+                  showtimes <span class="arrow">→</span> seat_maps
+                </td>
+                <td><span class="card-pill">N : 1</span></td>
+                <td class="del">ห้ามลบ ถ้ามีรอบใช้อยู่</td>
+                <td>
+                  ผังหนึ่งถูกหลายรอบใช้ได้ และผังต้องเป็นของสถานที่เดียวกับรอบ
+                </td>
+              </tr>
+              <tr>
+                <td class="rel">
+                  ticket_tiers <span class="arrow">→</span> events
+                </td>
+                <td><span class="card-pill">N : 1</span></td>
+                <td class="del cascade">ระดับราคาหายตาม</td>
+                <td>งานหนึ่งมีหลายระดับราคา</td>
+              </tr>
+              <tr>
+                <td class="rel">
+                  tier_sections <span class="arrow">→</span> ticket_tiers
+                </td>
+                <td><span class="card-pill">N : 1</span></td>
+                <td class="del cascade">การจับคู่หายตาม</td>
+                <td>ระดับราคาหนึ่งครอบได้หลายโซน</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-logical">
+        <h2 id="h-logical">เส้นประ: เชื่อมกันแต่ไม่มี FK</h2>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เส้น</th>
+                <th>ทำไมไม่ใช้ FK</th>
+                <th>ระบบตรวจอย่างไรแทน</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="rel">
+                  tier_sections <span class="arrow">⇢</span> seat_map_sections
+                </td>
+                <td>
+                  งานหนึ่งอาจมีหลายรอบที่ใช้ผังต่างกัน
+                  ชื่อโซนเดียวจึงต้องชี้ไปได้หลายผังพร้อมกัน ซึ่ง FK ทำไม่ได้
+                </td>
+                <td>
+                  ตอนกดประกาศงาน ระบบเช็กว่าทุกโซนในทุกผังมีราคาครบ
+                  ถ้าไม่ครบจะบอกว่าโซนไหนยังขาด
+                </td>
+              </tr>
+              <tr>
+                <td class="rel">outbox <span class="arrow">⇢</span> events</td>
+                <td>
+                  จดหมายเป็นบันทึกว่าเกิดอะไรขึ้นแล้ว ต้องเก็บไว้แม้งานจะถูกลบ
+                </td>
+                <td>
+                  จดหมายถูกเขียนพร้อมกับการเปลี่ยนข้อมูลงานเสมอ
+                  จึงไม่มีจดหมายของงานที่ไม่มีอยู่จริง
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-cross">
+        <h2 id="h-cross">booking service เอาอะไรไปจาก catalog</h2>
+        <p>
+          แต่ละ service มี database ของตัวเอง booking จึงเชื่อมกับตารางของ
+          catalog ตรงๆ ไม่ได้ ใช้วิธีคัดลอกข้อมูลที่ต้องใช้ไปเก็บเอง
+          โดยได้รับผ่านจดหมาย (event) หรือถามตรง (gRPC)
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>booking เก็บ</th>
+                <th>เอามาจาก</th>
+                <th>ได้มาตอนไหน</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>รอบการแสดง วันเวลา สถานที่</td>
+                <td class="mono">showtimes</td>
+                <td>
+                  จดหมาย SalesOpened ตอนเปิดขาย และ ShowtimeRescheduled
+                  ตอนเลื่อนรอบ
+                </td>
+              </tr>
+              <tr>
+                <td>จำนวนตั๋วสูงสุดต่อคน</td>
+                <td class="mono">events</td>
+                <td>จดหมาย SalesOpened</td>
+              </tr>
+              <tr>
+                <td>รุ่นของข้อมูล (catalog_version)</td>
+                <td class="mono">events.version</td>
+                <td>ทุกจดหมาย ใช้ทิ้งจดหมายเก่าที่มาถึงช้า</td>
+              </tr>
+              <tr>
+                <td>งานถูกยกเลิก</td>
+                <td class="mono">events</td>
+                <td>จดหมาย EventCancelled</td>
+              </tr>
+              <tr>
+                <td>รายการเก้าอี้และระดับราคาของแต่ละตัว</td>
+                <td class="mono">seat_map_seats + tier_sections</td>
+                <td>
+                  ถาม catalog ตรง (ListShowtimeSeats) หลังได้จดหมายเปิดขาย
+                </td>
+              </tr>
+              <tr>
+                <td>ราคาตั๋วในใบจอง</td>
+                <td class="mono">ticket_tiers</td>
+                <td>ถาม catalog ตรง (GetTierPrices) ตอนลูกค้ากดจอง</td>
+              </tr>
+              <tr>
+                <td>วันปิดขาย <span class="todo">ยังไม่มี ต้องเพิ่ม</span></td>
+                <td class="mono">events.sales_close_at</td>
+                <td>
+                  จดหมาย SalesOpened เพราะตอนปิดขายไม่มีจดหมายแจ้ง booking
+                  จึงต้องดูวันเอง
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-guard">
+        <h2 id="h-guard">กฎที่ database บังคับเอง</h2>
+        <p>
+          นอกจากเส้นเชื่อม database ยังมีตัวเฝ้า (trigger)
+          คอยปฏิเสธการแก้ข้อมูลที่ผิดกฎ ถึงโค้ดฝั่ง service จะลืมเช็ก
+          ข้อมูลก็ยังไม่พัง
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>กลุ่ม</th>
+                <th>กฎ</th>
+                <th>ชื่อ error ที่ได้</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="agg-tag venue">สถานที่</span></td>
+                <td>
+                  ผังที่ล็อกแล้ว ห้ามเพิ่ม ลบ หรือแก้โซนและเก้าอี้ ห้ามปลดล็อก
+                  และห้ามลบผัง
+                </td>
+                <td class="mono">seat_map_locked</td>
+              </tr>
+              <tr>
+                <td><span class="agg-tag event">งาน</span></td>
+                <td>
+                  สถานะเดินได้ตามลำดับเท่านั้น เช่น
+                  เปิดขายแล้วจะกลับไปเป็นร่างไม่ได้
+                </td>
+                <td class="mono">event_invalid_transition</td>
+              </tr>
+              <tr>
+                <td><span class="agg-tag event">งาน</span></td>
+                <td>เจ้าของงานเปลี่ยนไม่ได้</td>
+                <td class="mono">event_owner_immutable</td>
+              </tr>
+              <tr>
+                <td><span class="agg-tag event">งาน</span></td>
+                <td>
+                  หลังประกาศแล้ว ห้ามเพิ่มหรือลบรอบ ระดับราคา และการจับคู่โซน
+                  ห้ามแก้ช่วงเปิดขาย และห้ามลบงาน
+                </td>
+                <td class="mono">event_structure_locked</td>
+              </tr>
+              <tr>
+                <td><span class="agg-tag event">งาน</span></td>
+                <td>เปิดขายแล้วห้ามแก้ราคา</td>
+                <td class="mono">tier_price_locked</td>
+              </tr>
+              <tr>
+                <td><span class="agg-tag event">งาน</span></td>
+                <td>งานที่ยกเลิกแล้ว แก้อะไรไม่ได้อีก ทั้งตัวงานและรอบ</td>
+                <td class="mono">event_cancelled</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>
