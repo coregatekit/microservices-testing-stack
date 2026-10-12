@@ -8,6 +8,9 @@ golangci-lint = "2.14.0"
 python = "3.15.0"
 uv = "0.13.0"
 
+[env]
+UV_PYTHON_DOWNLOADS = "never"
+
 [tasks."bff:dev"]
 dir = "services/bff"
 run = "bun run --watch src/index.ts"
