@@ -7,12 +7,16 @@
     "typecheck": "bun check"
   },
   "devDependencies": {
+    "@bufbuild/protoc-gen-es": "^2.16.0",
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^7"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.16.0",
+    "@connectrpc/connect": "^2.2.0",
+    "@connectrpc/connect-node": "^2.2.0",
     "@elysiajs/graphql-yoga": "^1.4.1",
     "elysia": "^1.4.30",
     "graphql": "^17.0.2",
