@@ -108,3 +108,96 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 - **`vagrant up` error เรื่อง IP range** → IP อยู่นอกช่วง `192.168.56.0/21` ให้แก้ `/etc/vbox/networks.conf`
 - **Node ไม่ join / pod ข้ามเครื่องคุยกันไม่ได้** → ตรวจว่าใส่ `--node-ip` และ `--flannel-iface` ถูก interface แล้ว
 - **Ansible SSH ไม่ได้** → ตรวจ key path ด้วย `vagrant ssh-config`
+
+## Local Database & Migrations
+
+Postgres สำหรับพัฒนาบนเครื่อง รันด้วย docker compose และจัดการ migration ด้วย [goose](https://github.com/pressly/goose) ผ่าน mise task
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [mise](https://mise.jdx.dev/) แล้วรัน `mise install` เพื่อติดตั้ง goose และ toolchain อื่นตาม `mise.toml`
+
+### Database ต่อ service
+
+ทุก service มี database และ app user ของตัวเอง ส่วน `migrator` ใช้ร่วมกันทุก service
+
+| Database       | App user (DML เท่านั้น)  | ใช้โดย            |
+| -------------- | ----------------------- | ---------------- |
+| `catalog`      | `catalog_service`       | catalog          |
+| `booking`      | `booking_service`       | booking          |
+| `payment`      | `payment_service`       | payment          |
+| `partner`      | `partner_service`       | partner-api      |
+| `notification` | `notification_service`  | notification     |
+
+- `migrator` เป็นเจ้าของทุก database ใช้รัน migration (DDL) เท่านั้น
+- app user อ่านเขียนข้อมูลได้ แต่สร้าง แก้ หรือลบตารางไม่ได้ และเข้า database ของ service อื่นไม่ได้
+- role และ database สร้างโดย script ใน [scripts/postgres/init/](scripts/postgres/init/)
+
+### Setup ครั้งแรก
+
+สร้างไฟล์ 2 ไฟล์ที่ root (ทั้งคู่อยู่ใน `.gitignore` ห้าม commit) สุ่มรหัสผ่านด้วย `openssl rand -hex 16`
+
+`.env` ให้ docker compose ใช้สร้าง role:
+
+```dotenv
+POSTGRES_PASSWORD=
+MIGRATOR_PASSWORD=
+CATALOG_SERVICE_PASSWORD=
+BOOKING_SERVICE_PASSWORD=
+PAYMENT_SERVICE_PASSWORD=
+PARTNER_SERVICE_PASSWORD=
+NOTIFICATION_SERVICE_PASSWORD=
+```
+
+`mise.local.toml` ให้ goose และ service ใช้เชื่อมต่อ (รหัสผ่านต้องตรงกับ `.env`):
+
+```toml
+[env]
+MIGRATOR_DATABASE_URL_BASE = "postgres://migrator:<pw>@localhost:5432"
+CATALOG_DATABASE_URL = "postgres://catalog_service:<pw>@localhost:5432/catalog?sslmode=disable"
+# BOOKING_DATABASE_URL, PAYMENT_DATABASE_URL, ... รูปแบบเดียวกัน
+```
+
+จากนั้นเปิด database:
+
+```bash
+mise trust
+make db-up
+```
+
+> init script รันเฉพาะตอนที่ volume ยังว่าง ถ้าเปลี่ยน script หรือรหัสผ่านใน `.env` ต้องรัน `make db-reset` (ข้อมูลเดิมหายทั้งหมด)
+
+### Make Commands
+
+รัน `make` เพื่อดูรายการคำสั่งทั้งหมด คำสั่งที่ทำงานกับ service ใด service หนึ่งต้องระบุ `SVC` เสมอ
+
+| คำสั่ง                                               | ความหมาย                                            |
+| ---------------------------------------------------- | --------------------------------------------------- |
+| `make db-up`                                         | เปิด Postgres                                       |
+| `make db-down`                                       | ปิด Postgres (ข้อมูลยังอยู่)                         |
+| `make db-reset`                                      | ⚠️ ลบข้อมูลทั้งหมด แล้วรัน init script ใหม่           |
+| `make db-psql SVC=catalog`                           | เปิด psql ที่ database ของ service                   |
+| `make migrate-create SVC=catalog NAME=create_venues` | สร้างไฟล์ migration ใหม่ใน `services/<svc>/db/migrations/` |
+| `make migrate-up SVC=catalog`                        | รัน migration ที่ยังไม่ได้รันทั้งหมด                 |
+| `make migrate-down SVC=catalog`                      | ย้อน migration ล่าสุด 1 ไฟล์                         |
+| `make migrate-status SVC=catalog`                    | ดูว่า migration ไหนรันแล้ว ไหนยัง                   |
+| `make migrate-redo SVC=catalog`                      | down แล้ว up migration ล่าสุด                        |
+| `make migrate-validate SVC=catalog`                  | ตรวจไฟล์ migration โดยไม่ต้องต่อ database             |
+
+### กติกา migration
+
+- migration ที่ merge แล้ว **ห้ามแก้** ถ้าต้องเปลี่ยนให้สร้างไฟล์ใหม่ (`migrate-redo` ใช้ได้เฉพาะไฟล์ที่ยังไม่ merge)
+- production เดินหน้าอย่างเดียว ส่วน `-- +goose Down` มีไว้ใช้ตอน dev
+- `CREATE INDEX CONCURRENTLY` ต้องอยู่ในไฟล์แยกที่มี `-- +goose NO TRANSACTION`
+
+### เพิ่ม migration ให้ service อื่น
+
+ตอนนี้มี mise task `catalog:migrate` ตัวเดียว ถ้าจะเริ่มทำ migration ของ service อื่น ให้เพิ่ม task ใน `mise.toml` โดยคัดลอกจาก `catalog:migrate` แล้วเปลี่ยน `dir` และชื่อ database ท้าย `GOOSE_DBSTRING` เช่น
+
+```toml
+[tasks."booking:migrate"]
+dir = "services/booking"
+env = { GOOSE_DRIVER = "postgres", GOOSE_DBSTRING = "{{env.MIGRATOR_DATABASE_URL_BASE}}/booking?sslmode=disable", GOOSE_MIGRATION_DIR = "db/migrations" }
+run = "goose"
+```
