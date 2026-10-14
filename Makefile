@@ -23,7 +23,7 @@ db-reset: ## Delete local Postgres data and re-run init scripts
 	docker compose up -d
 
 db-psql: require-svc ## Open psql as superuser on the SVC database
-	docker exec -it localdb psql -U user -d $(SVC)
+	docker exec -it -e PGOPTIONS="-c search_path=$(SVC)" localdb psql -U user -d $(SVC)
 
 # --- Migrations (goose via mise task <SVC>:migrate) -------------------------
 
