@@ -350,3 +350,6 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/go,python,node
 
 # Executable files
+
+# mise local configuration files
+mise.local.toml
