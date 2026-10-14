@@ -716,6 +716,15 @@
             DRAFT คือยังร่างอยู่ แก้ได้ทุกอย่าง LOCKED คือถูกล็อกแล้ว
             แก้ไม่ได้อีก
           </dd>
+          <dt>created_* / updated_*</dt>
+          <dd>
+            คอลัมน์บันทึกว่าใครสร้างและใครแก้ล่าสุด เมื่อไร มี 4 ช่อง:
+            <code>created_at</code>, <code>created_by</code>,
+            <code>updated_at</code>, <code>updated_by</code>
+            มีเฉพาะตารางที่ผู้ใช้แก้โดยตรง เวลาทั้งสองช่อง database ใส่ให้เอง
+            (<code>updated_at</code> ใช้ trigger) ส่วนผู้สร้างและผู้แก้
+            service ต้องส่งมาจาก token ของผู้ใช้
+          </dd>
           <dt>version</dt>
           <dd>
             ตัวเลขที่บวกเพิ่มทุกครั้งที่ข้อมูลงานเปลี่ยน
@@ -757,50 +766,47 @@
             />
             <path
               class="agg-zone event"
-              d="M452 22a10 10 0 0 1 10 -10h720a10 10 0 0 1 10 10v640a10 10 0 0 1 -10 10h-292v-150h-438z"
+              d="M452 22a10 10 0 0 1 10 -10h720a10 10 0 0 1 10 10v652a10 10 0 0 1 -10 10h-292v-150h-438z"
             />
             <text class="zone-l venue" x="22" y="30">กลุ่มสถานที่</text>
             <text class="zone-l event" x="1178" y="30" text-anchor="end">
               กลุ่มงาน
             </text>
-            <path class="edge fk" d="M170 240 V190" />
-            <text class="card" x="178" y="234">N</text>
-            <text class="card" x="178" y="204">1</text>
-            <path class="edge fk" d="M170 440 V390" />
-            <text class="card" x="178" y="434">N</text>
-            <text class="card" x="178" y="404">1</text>
-            <path class="edge fk" d="M170 600 V546" />
-            <text class="card" x="178" y="594">N</text>
-            <text class="card" x="178" y="560">1</text>
-            <path class="edge fk" d="M470 309 H300" />
-            <text class="card" x="456" y="303">N</text>
-            <text class="card" x="308" y="303">1</text>
-            <path class="edge fk" d="M730 265 H815 V83 H900" />
-            <text class="card" x="738" y="259">N</text>
+            <path class="edge fk" d="M170 252 V212" />
+            <text class="card" x="178" y="246">N</text>
+            <text class="card" x="178" y="226">1</text>
+            <path class="edge fk" d="M170 464 V424" />
+            <text class="card" x="178" y="458">N</text>
+            <text class="card" x="178" y="438">1</text>
+            <path class="edge fk" d="M170 610 V570" />
+            <text class="card" x="178" y="604">N</text>
+            <text class="card" x="178" y="584">1</text>
+            <path class="edge fk" d="M470 321 H300" />
+            <text class="card" x="456" y="315">N</text>
+            <text class="card" x="308" y="315">1</text>
+            <path class="edge fk" d="M730 277 H815 V83 H900" />
+            <text class="card" x="738" y="271">N</text>
             <text class="card" x="886" y="77">1</text>
-            <path class="edge fk" d="M1030 360 V300" />
-            <text class="card" x="1038" y="354">N</text>
-            <text class="card" x="1038" y="314">1</text>
-            <path class="edge fk" d="M1030 540 V488" />
-            <text class="card" x="1038" y="534">N</text>
-            <text class="card" x="1038" y="502">1</text>
-            <path class="edge logical" d="M960 646 V770 H20 V505 H40" />
-            <text class="card" x="968" y="662">N</text>
-            <text class="card" x="26" y="499">N</text>
+            <path class="edge fk" d="M1030 362 V322" />
+            <text class="card" x="1038" y="356">N</text>
+            <text class="card" x="1038" y="336">1</text>
+            <path class="edge fk" d="M1030 552 V512" />
+            <text class="card" x="1038" y="546">N</text>
+            <text class="card" x="1038" y="526">1</text>
+            <path class="edge logical" d="M960 658 V770 H20 V529 H40" />
+            <text class="card" x="968" y="674">N</text>
+            <text class="card" x="26" y="523">N</text>
             <path class="edge logical" d="M730 625 H870 V280 H900" />
             <text class="card" x="738" y="619">N</text>
             <text class="card" x="886" y="274">1</text>
-            <text class="note" x="310" y="326">composite FK</text>
+            <text class="note" x="310" y="338">composite FK</text>
             <text class="note" x="400" y="762">
               เชื่อมด้วยชื่อโซน ตรวจตอนประกาศงาน
             </text>
             <text class="note" x="740" y="642">ระบุงาน แต่ไม่มี FK</text>
             <g class="tbl agg-venue">
-              <rect class="tb" x="40" y="40" width="260" height="150" rx="6" />
-              <path
-                class="th"
-                d="M40 46a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
-              />
+              <rect class="tb" x="40" y="40" width="260" height="172" rx="6" />
+              <path class="th" d="M40 46a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z" />
               <text class="tt" x="52" y="61">venues</text>
               <text class="flag f-pk" x="52" y="87">PK</text>
               <text class="cn pk" x="96" y="87">venue_id</text>
@@ -815,123 +821,98 @@
               <text class="ct" x="288" y="153" text-anchor="end">text</text>
               <text class="cn" x="96" y="175">timezone</text>
               <text class="ct" x="288" y="175" text-anchor="end">text</text>
+              <rect class="zebra" x="41" y="182" width="258" height="22" />
+              <text class="cn" x="96" y="197">created_* / updated_*</text>
             </g>
             <g class="tbl agg-venue">
-              <rect class="tb" x="40" y="240" width="260" height="150" rx="6" />
-              <path
-                class="th"
-                d="M40 246a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
-              />
-              <text class="tt" x="52" y="261">seat_maps</text>
-              <text class="flag f-pk" x="52" y="287">PK</text>
-              <text class="cn pk" x="96" y="287">seat_map_id</text>
-              <text class="ct" x="288" y="287" text-anchor="end">uuid</text>
-              <rect class="zebra" x="41" y="294" width="258" height="22" />
-              <text class="flag f-fk" x="52" y="309">FK</text>
-              <text class="cn" x="96" y="309">venue_id</text>
-              <text class="ct" x="288" y="309" text-anchor="end">uuid</text>
-              <text class="flag f-uq" x="52" y="331">UQ</text>
-              <text class="cn" x="96" y="331">version</text>
-              <text class="ct" x="288" y="331" text-anchor="end">int</text>
-              <rect class="zebra" x="41" y="338" width="258" height="22" />
-              <text class="cn" x="96" y="353">status</text>
-              <text class="ct" x="288" y="353" text-anchor="end">
-                DRAFT | LOCKED
-              </text>
-              <text class="cn" x="96" y="375">locked_at</text>
-              <text class="ct" x="288" y="375" text-anchor="end">
-                timestamptz
-              </text>
+              <rect class="tb" x="40" y="252" width="260" height="172" rx="6" />
+              <path class="th" d="M40 258a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z" />
+              <text class="tt" x="52" y="273">seat_maps</text>
+              <text class="flag f-pk" x="52" y="299">PK</text>
+              <text class="cn pk" x="96" y="299">seat_map_id</text>
+              <text class="ct" x="288" y="299" text-anchor="end">uuid</text>
+              <rect class="zebra" x="41" y="306" width="258" height="22" />
+              <text class="flag f-fk" x="52" y="321">FK</text>
+              <text class="cn" x="96" y="321">venue_id</text>
+              <text class="ct" x="288" y="321" text-anchor="end">uuid</text>
+              <text class="flag f-uq" x="52" y="343">UQ</text>
+              <text class="cn" x="96" y="343">version</text>
+              <text class="ct" x="288" y="343" text-anchor="end">int</text>
+              <rect class="zebra" x="41" y="350" width="258" height="22" />
+              <text class="cn" x="96" y="365">status</text>
+              <text class="ct" x="288" y="365" text-anchor="end">DRAFT | LOCKED</text>
+              <text class="cn" x="96" y="387">locked_at</text>
+              <text class="ct" x="288" y="387" text-anchor="end">timestamptz</text>
+              <rect class="zebra" x="41" y="394" width="258" height="22" />
+              <text class="cn" x="96" y="409">created_* / updated_*</text>
             </g>
             <g class="tbl agg-venue">
-              <rect class="tb" x="40" y="440" width="260" height="106" rx="6" />
-              <path
-                class="th"
-                d="M40 446a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
-              />
-              <text class="tt" x="52" y="461">seat_map_sections</text>
-              <text class="flag f-pk" x="52" y="487">PK</text>
-              <text class="flag f-fk" x="72" y="487">FK</text>
-              <text class="cn pk" x="96" y="487">seat_map_id</text>
-              <text class="ct" x="288" y="487" text-anchor="end">uuid</text>
-              <rect class="zebra" x="41" y="494" width="258" height="22" />
-              <text class="flag f-pk" x="52" y="509">PK</text>
-              <text class="cn pk" x="96" y="509">section_code</text>
-              <text class="ct" x="288" y="509" text-anchor="end">text</text>
-              <text class="cn" x="96" y="531">name</text>
-              <text class="ct" x="288" y="531" text-anchor="end">text</text>
+              <rect class="tb" x="40" y="464" width="260" height="106" rx="6" />
+              <path class="th" d="M40 470a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z" />
+              <text class="tt" x="52" y="485">seat_map_sections</text>
+              <text class="flag f-pk" x="52" y="511">PK</text>
+              <text class="flag f-fk" x="72" y="511">FK</text>
+              <text class="cn pk" x="96" y="511">seat_map_id</text>
+              <text class="ct" x="288" y="511" text-anchor="end">uuid</text>
+              <rect class="zebra" x="41" y="518" width="258" height="22" />
+              <text class="flag f-pk" x="52" y="533">PK</text>
+              <text class="cn pk" x="96" y="533">section_code</text>
+              <text class="ct" x="288" y="533" text-anchor="end">text</text>
+              <text class="cn" x="96" y="555">name</text>
+              <text class="ct" x="288" y="555" text-anchor="end">text</text>
             </g>
             <g class="tbl agg-venue">
-              <rect class="tb" x="40" y="600" width="260" height="150" rx="6" />
-              <path
-                class="th"
-                d="M40 606a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
-              />
-              <text class="tt" x="52" y="621">seat_map_seats</text>
-              <text class="flag f-pk" x="52" y="647">PK</text>
-              <text class="flag f-fk" x="72" y="647">FK</text>
-              <text class="cn pk" x="96" y="647">seat_map_id</text>
-              <text class="ct" x="288" y="647" text-anchor="end">uuid</text>
-              <rect class="zebra" x="41" y="654" width="258" height="22" />
-              <text class="flag f-pk" x="52" y="669">PK</text>
-              <text class="cn pk" x="96" y="669">seat_id</text>
-              <text class="ct" x="288" y="669" text-anchor="end">text</text>
-              <text class="flag f-fk" x="52" y="691">FK</text>
-              <text class="cn" x="96" y="691">section_code</text>
-              <text class="ct" x="288" y="691" text-anchor="end">text</text>
-              <rect class="zebra" x="41" y="698" width="258" height="22" />
-              <text class="flag f-uq" x="52" y="713">UQ</text>
-              <text class="cn" x="96" y="713">row_label</text>
-              <text class="ct" x="288" y="713" text-anchor="end">text</text>
-              <text class="flag f-uq" x="52" y="735">UQ</text>
-              <text class="cn" x="96" y="735">seat_number</text>
-              <text class="ct" x="288" y="735" text-anchor="end">int</text>
+              <rect class="tb" x="40" y="610" width="260" height="150" rx="6" />
+              <path class="th" d="M40 616a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z" />
+              <text class="tt" x="52" y="631">seat_map_seats</text>
+              <text class="flag f-pk" x="52" y="657">PK</text>
+              <text class="flag f-fk" x="72" y="657">FK</text>
+              <text class="cn pk" x="96" y="657">seat_map_id</text>
+              <text class="ct" x="288" y="657" text-anchor="end">uuid</text>
+              <rect class="zebra" x="41" y="664" width="258" height="22" />
+              <text class="flag f-pk" x="52" y="679">PK</text>
+              <text class="cn pk" x="96" y="679">seat_id</text>
+              <text class="ct" x="288" y="679" text-anchor="end">text</text>
+              <text class="flag f-fk" x="52" y="701">FK</text>
+              <text class="cn" x="96" y="701">section_code</text>
+              <text class="ct" x="288" y="701" text-anchor="end">text</text>
+              <rect class="zebra" x="41" y="708" width="258" height="22" />
+              <text class="flag f-uq" x="52" y="723">UQ</text>
+              <text class="cn" x="96" y="723">row_label</text>
+              <text class="ct" x="288" y="723" text-anchor="end">text</text>
+              <text class="flag f-uq" x="52" y="745">UQ</text>
+              <text class="cn" x="96" y="745">seat_number</text>
+              <text class="ct" x="288" y="745" text-anchor="end">int</text>
             </g>
             <g class="tbl agg-event">
-              <rect
-                class="tb"
-                x="470"
-                y="200"
-                width="260"
-                height="172"
-                rx="6"
-              />
-              <path
-                class="th"
-                d="M470 206a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
-              />
-              <text class="tt" x="482" y="221">showtimes</text>
-              <text class="flag f-pk" x="482" y="247">PK</text>
-              <text class="cn pk" x="526" y="247">showtime_id</text>
-              <text class="ct" x="718" y="247" text-anchor="end">uuid</text>
-              <rect class="zebra" x="471" y="254" width="258" height="22" />
-              <text class="flag f-fk" x="482" y="269">FK</text>
-              <text class="cn" x="526" y="269">event_id</text>
-              <text class="ct" x="718" y="269" text-anchor="end">uuid</text>
-              <text class="flag f-fk" x="482" y="291">FK</text>
-              <text class="cn" x="526" y="291">venue_id</text>
-              <text class="ct" x="718" y="291" text-anchor="end">uuid</text>
-              <rect class="zebra" x="471" y="298" width="258" height="22" />
-              <text class="flag f-fk" x="482" y="313">FK</text>
-              <text class="cn" x="526" y="313">seat_map_id</text>
-              <text class="ct" x="718" y="313" text-anchor="end">uuid</text>
-              <text class="flag f-uq" x="482" y="335">UQ</text>
-              <text class="cn" x="526" y="335">starts_at</text>
-              <text class="ct" x="718" y="335" text-anchor="end">
-                timestamptz
-              </text>
-              <rect class="zebra" x="471" y="342" width="258" height="22" />
-              <text class="cn" x="526" y="357">ends_at</text>
-              <text class="ct" x="718" y="357" text-anchor="end">
-                timestamptz
-              </text>
+              <rect class="tb" x="470" y="212" width="260" height="194" rx="6" />
+              <path class="th" d="M470 218a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z" />
+              <text class="tt" x="482" y="233">showtimes</text>
+              <text class="flag f-pk" x="482" y="259">PK</text>
+              <text class="cn pk" x="526" y="259">showtime_id</text>
+              <text class="ct" x="718" y="259" text-anchor="end">uuid</text>
+              <rect class="zebra" x="471" y="266" width="258" height="22" />
+              <text class="flag f-fk" x="482" y="281">FK</text>
+              <text class="cn" x="526" y="281">event_id</text>
+              <text class="ct" x="718" y="281" text-anchor="end">uuid</text>
+              <text class="flag f-fk" x="482" y="303">FK</text>
+              <text class="cn" x="526" y="303">venue_id</text>
+              <text class="ct" x="718" y="303" text-anchor="end">uuid</text>
+              <rect class="zebra" x="471" y="310" width="258" height="22" />
+              <text class="flag f-fk" x="482" y="325">FK</text>
+              <text class="cn" x="526" y="325">seat_map_id</text>
+              <text class="ct" x="718" y="325" text-anchor="end">uuid</text>
+              <text class="flag f-uq" x="482" y="347">UQ</text>
+              <text class="cn" x="526" y="347">starts_at</text>
+              <text class="ct" x="718" y="347" text-anchor="end">timestamptz</text>
+              <rect class="zebra" x="471" y="354" width="258" height="22" />
+              <text class="cn" x="526" y="369">ends_at</text>
+              <text class="ct" x="718" y="369" text-anchor="end">timestamptz</text>
+              <text class="cn" x="526" y="391">created_* / updated_*</text>
             </g>
             <g class="tbl agg-event">
-              <rect class="tb" x="900" y="40" width="260" height="260" rx="6" />
-              <path
-                class="th"
-                d="M900 46a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
-              />
+              <rect class="tb" x="900" y="40" width="260" height="282" rx="6" />
+              <path class="th" d="M900 46a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z" />
               <text class="tt" x="912" y="61">events</text>
               <text class="flag f-pk" x="912" y="87">PK</text>
               <text class="cn pk" x="956" y="87">event_id</text>
@@ -948,76 +929,52 @@
               <text class="ct" x="1148" y="175" text-anchor="end">char(3)</text>
               <rect class="zebra" x="901" y="182" width="258" height="22" />
               <text class="cn" x="956" y="197">sales_open_at</text>
-              <text class="ct" x="1148" y="197" text-anchor="end">
-                timestamptz
-              </text>
+              <text class="ct" x="1148" y="197" text-anchor="end">timestamptz</text>
               <text class="cn" x="956" y="219">sales_close_at</text>
-              <text class="ct" x="1148" y="219" text-anchor="end">
-                timestamptz
-              </text>
+              <text class="ct" x="1148" y="219" text-anchor="end">timestamptz</text>
               <rect class="zebra" x="901" y="226" width="258" height="22" />
               <text class="cn" x="956" y="241">max_tickets_per_user</text>
               <text class="ct" x="1148" y="241" text-anchor="end">int2</text>
               <text class="cn" x="956" y="263">version</text>
               <text class="ct" x="1148" y="263" text-anchor="end">bigint</text>
               <rect class="zebra" x="901" y="270" width="258" height="22" />
-              <text class="cn" x="956" y="285">
-                cancelled_* / cancel_reason
-              </text>
+              <text class="cn" x="956" y="285">cancelled_* / cancel_reason</text>
+              <text class="cn" x="956" y="307">created_* / updated_*</text>
             </g>
             <g class="tbl agg-event">
-              <rect
-                class="tb"
-                x="900"
-                y="360"
-                width="260"
-                height="128"
-                rx="6"
-              />
-              <path
-                class="th"
-                d="M900 366a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
-              />
-              <text class="tt" x="912" y="381">ticket_tiers</text>
-              <text class="flag f-pk" x="912" y="407">PK</text>
-              <text class="flag f-fk" x="932" y="407">FK</text>
-              <text class="cn pk" x="956" y="407">event_id</text>
-              <text class="ct" x="1148" y="407" text-anchor="end">uuid</text>
-              <rect class="zebra" x="901" y="414" width="258" height="22" />
-              <text class="flag f-pk" x="912" y="429">PK</text>
-              <text class="cn pk" x="956" y="429">tier_code</text>
-              <text class="ct" x="1148" y="429" text-anchor="end">text</text>
-              <text class="cn" x="956" y="451">name</text>
-              <text class="ct" x="1148" y="451" text-anchor="end">text</text>
-              <rect class="zebra" x="901" y="458" width="258" height="22" />
-              <text class="cn" x="956" y="473">price_minor</text>
-              <text class="ct" x="1148" y="473" text-anchor="end">bigint</text>
+              <rect class="tb" x="900" y="362" width="260" height="150" rx="6" />
+              <path class="th" d="M900 368a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z" />
+              <text class="tt" x="912" y="383">ticket_tiers</text>
+              <text class="flag f-pk" x="912" y="409">PK</text>
+              <text class="flag f-fk" x="932" y="409">FK</text>
+              <text class="cn pk" x="956" y="409">event_id</text>
+              <text class="ct" x="1148" y="409" text-anchor="end">uuid</text>
+              <rect class="zebra" x="901" y="416" width="258" height="22" />
+              <text class="flag f-pk" x="912" y="431">PK</text>
+              <text class="cn pk" x="956" y="431">tier_code</text>
+              <text class="ct" x="1148" y="431" text-anchor="end">text</text>
+              <text class="cn" x="956" y="453">name</text>
+              <text class="ct" x="1148" y="453" text-anchor="end">text</text>
+              <rect class="zebra" x="901" y="460" width="258" height="22" />
+              <text class="cn" x="956" y="475">price_minor</text>
+              <text class="ct" x="1148" y="475" text-anchor="end">bigint</text>
+              <text class="cn" x="956" y="497">created_* / updated_*</text>
             </g>
             <g class="tbl agg-event">
-              <rect
-                class="tb"
-                x="900"
-                y="540"
-                width="260"
-                height="106"
-                rx="6"
-              />
-              <path
-                class="th"
-                d="M900 546a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z"
-              />
-              <text class="tt" x="912" y="561">tier_sections</text>
-              <text class="flag f-pk" x="912" y="587">PK</text>
-              <text class="flag f-fk" x="932" y="587">FK</text>
-              <text class="cn pk" x="956" y="587">event_id</text>
-              <text class="ct" x="1148" y="587" text-anchor="end">uuid</text>
-              <rect class="zebra" x="901" y="594" width="258" height="22" />
-              <text class="flag f-pk" x="912" y="609">PK</text>
-              <text class="cn pk" x="956" y="609">section_code</text>
-              <text class="ct" x="1148" y="609" text-anchor="end">text</text>
-              <text class="flag f-fk" x="912" y="631">FK</text>
-              <text class="cn" x="956" y="631">tier_code</text>
-              <text class="ct" x="1148" y="631" text-anchor="end">text</text>
+              <rect class="tb" x="900" y="552" width="260" height="106" rx="6" />
+              <path class="th" d="M900 558a6 6 0 0 1 6 -6h248a6 6 0 0 1 6 6v26h-260z" />
+              <text class="tt" x="912" y="573">tier_sections</text>
+              <text class="flag f-pk" x="912" y="599">PK</text>
+              <text class="flag f-fk" x="932" y="599">FK</text>
+              <text class="cn pk" x="956" y="599">event_id</text>
+              <text class="ct" x="1148" y="599" text-anchor="end">uuid</text>
+              <rect class="zebra" x="901" y="606" width="258" height="22" />
+              <text class="flag f-pk" x="912" y="621">PK</text>
+              <text class="cn pk" x="956" y="621">section_code</text>
+              <text class="ct" x="1148" y="621" text-anchor="end">text</text>
+              <text class="flag f-fk" x="912" y="643">FK</text>
+              <text class="cn" x="956" y="643">tier_code</text>
+              <text class="ct" x="1148" y="643" text-anchor="end">text</text>
             </g>
             <g class="tbl agg-msg">
               <rect
