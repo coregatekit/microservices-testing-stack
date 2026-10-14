@@ -167,6 +167,11 @@
         max-width: 70ch;
         color: var(--muted);
       }
+      section > h3 {
+        margin: 12px 0 0;
+        font-size: 17px;
+        font-weight: 600;
+      }
       code,
       .mono {
         font-family: var(--font-mono);
@@ -874,6 +879,7 @@
               <text class="cn pk" x="96" y="679">seat_id</text>
               <text class="ct" x="288" y="679" text-anchor="end">text</text>
               <text class="flag f-fk" x="52" y="701">FK</text>
+              <text class="flag f-uq" x="72" y="701">UQ</text>
               <text class="cn" x="96" y="701">section_code</text>
               <text class="ct" x="288" y="701" text-anchor="end">text</text>
               <rect class="zebra" x="41" y="708" width="258" height="22" />
@@ -1169,7 +1175,10 @@
                   เพื่อเอาไปนับว่าตัวไหนว่าง ตัวไหนขายแล้ว
                 </dd>
                 <dt>กฎสำคัญ</dt>
-                <dd>แถวเดียวกันมีที่นั่งเลขซ้ำกันไม่ได้</dd>
+                <dd>
+                  ในโซนเดียวกัน แถวเดียวกันมีที่นั่งเลขซ้ำกันไม่ได้
+                  แต่ต่างโซนมี "แถว A ที่ 12" ซ้ำกันได้ เหมือนสถานที่จริงที่หลายโซนใช้ชื่อแถวชุดเดียวกัน
+                </dd>
               </dl>
             </article>
           </div>
@@ -1631,6 +1640,213 @@
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section aria-labelledby="h-why">
+        <h2 id="h-why">เหตุผลการออกแบบ</h2>
+        <p>
+          ส่วนนี้บันทึกว่าทำไม schema ถึงออกมาหน้าตาแบบนี้ สำหรับคนที่จะเขียน migration
+          หรือแก้ตารางต่อ กลุ่มสถานที่ทำเป็น migration แล้ว (<code>00001</code>–<code>00005</code>)
+          ส่วนกลุ่มงานและ outbox ยังเป็นแบบร่าง
+        </p>
+
+        <h3>หลักที่ใช้กับทุกตาราง</h3>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>เรื่อง</th>
+                <th>ทำแบบนี้</th>
+                <th>เพราะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>PK แบบ uuid</td>
+                <td><code>DEFAULT uuidv7()</code></td>
+                <td>
+                  v7 ขึ้นต้นด้วยเวลา ค่าใหม่ต่อท้าย index เสมอ ส่วน v4
+                  สุ่มกระจายทำให้ B-tree แตกหน้าบ่อย (<code>uuidv7()</code> มีใน Postgres 18)
+                </td>
+              </tr>
+              <tr>
+                <td>ชนิดข้อความ</td>
+                <td><code>text</code> + <code>CHECK</code></td>
+                <td>
+                  ใน Postgres <code>varchar(n)</code> เก็บและเร็วเท่า <code>text</code>
+                  ต่างแค่จำกัดความยาว แต่ลดความยาวทีหลังต้องล็อกตาราง ส่วน
+                  <code>CHECK</code> เปลี่ยนได้ด้วย <code>NOT VALID</code> + <code>VALIDATE</code>
+                  ไม่ใช้ <code>char(n)</code> เพราะเติมช่องว่างจนเปรียบเทียบค่าเพี้ยน
+                </td>
+              </tr>
+              <tr>
+                <td>ค่าที่มีให้เลือก (status)</td>
+                <td><code>text</code> + <code>CHECK (… IN (…))</code></td>
+                <td>
+                  <code>ENUM</code> เพิ่มค่าได้แต่ลบหรือเปลี่ยนชื่อไม่ได้
+                  <code>CHECK</code> ลบแล้วสร้างใหม่ได้ใน migration เดียว
+                </td>
+              </tr>
+              <tr>
+                <td>ใส่ CHECK ที่ไหน</td>
+                <td>เฉพาะช่องที่ระบบอื่นใช้ต่อ</td>
+                <td>
+                  เช่นรหัสโซนและรหัสเก้าอี้ที่ booking คัดลอกไป ส่วนช่องที่แสดงผลอย่างเดียว
+                  เช่นชื่อหรือที่อยู่ ให้ service ตรวจ
+                </td>
+              </tr>
+              <tr>
+                <td>ค่าว่าง</td>
+                <td><code>NOT NULL</code> เป็นค่าเริ่มต้น</td>
+                <td>
+                  ผ่อนให้ว่างได้ทีหลังง่าย แต่เพิ่ม <code>NOT NULL</code>
+                  ตอนมีข้อมูลแล้วต้องไล่เติมข้อมูลเก่าให้ครบก่อน
+                </td>
+              </tr>
+              <tr>
+                <td>ใครสร้าง / แก้เมื่อไร</td>
+                <td>
+                  <code>created_*</code> / <code>updated_*</code>
+                  เฉพาะตารางที่ผู้ใช้แก้โดยตรง
+                </td>
+                <td>
+                  เวลาให้ database ใส่เอง (<code>updated_at</code> ใช้ trigger
+                  <code>BEFORE UPDATE</code> เพราะต้องแก้แถวก่อนถูกเขียนลง disk)
+                  ส่วน <code>*_by</code> ไม่มี DEFAULT เพราะ service ต่อ DB
+                  ด้วย user เดียวเสมอ DB ไม่รู้ว่าผู้ใช้จริงคือใคร ถ้าลืมส่งจะ error
+                  ทันที ตารางลูกอย่างโซนและเก้าอี้ถูกแก้พร้อมผัง จึงดูที่ผังแทน
+                </td>
+              </tr>
+              <tr>
+                <td>ถ้าลบแม่</td>
+                <td><code>CASCADE</code> หรือ <code>RESTRICT</code></td>
+                <td>
+                  <code>CASCADE</code> เมื่อลูกเป็นส่วนหนึ่งของแม่และไม่มีความหมายถ้าอยู่ลำพัง
+                  (โซน เก้าอี้) <code>RESTRICT</code> เมื่อการลบอาจทำของที่อื่นพัง
+                  (ผังที่ showtime ใช้อยู่ ถ้าหายตั๋วที่ขายแล้วจะชี้ไปที่เก้าอี้ที่ไม่มีจริง)
+                </td>
+              </tr>
+              <tr>
+                <td>Index</td>
+                <td>สร้างเองเฉพาะที่ PK / UNIQUE ไม่ครอบ</td>
+                <td>
+                  Postgres สร้าง index ให้แค่ PK กับ UNIQUE และ index หลายคอลัมน์ใช้กับ
+                  query ที่กรองด้วยคอลัมน์ต้นๆ ได้ จึงใช้แทน index ของ FK ได้ถ้าขึ้นต้นด้วยคอลัมน์เดียวกัน
+                </td>
+              </tr>
+              <tr>
+                <td>ชื่อ constraint</td>
+                <td>ตั้งเองเมื่อชื่ออัตโนมัติไม่สื่อ</td>
+                <td>
+                  CHECK ที่อ้างหลายคอลัมน์ได้ชื่อ <code>&lt;table&gt;_check</code>
+                  อ่านจาก error แล้วไม่รู้ว่าผิดกฎข้อไหน และชื่อเกิน 63 ตัวอักษรจะถูกตัดท้าย
+                </td>
+              </tr>
+              <tr>
+                <td>schema และสิทธิ์</td>
+                <td>
+                  schema <code>catalog</code> (ไม่มี <code>public</code>),
+                  <code>migrator</code> ทำ DDL, <code>catalog_service</code> ทำได้แค่ DML
+                </td>
+                <td>
+                  service ลบหรือแก้โครงตารางเองไม่ได้ และเข้า database ของ service อื่นไม่ได้
+                  ตารางใหม่ที่ migrator สร้างได้สิทธิ์ DML ให้ service อัตโนมัติผ่าน
+                  <code>ALTER DEFAULT PRIVILEGES</code>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>เหตุผลรายตาราง (กลุ่มสถานที่)</h3>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ตาราง</th>
+                <th>ทำแบบนี้</th>
+                <th>เพราะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">venues</td>
+                <td><code>organizer_id text</code> ไม่มี FK</td>
+                <td>
+                  organizer อยู่ใน Keycloak คนละระบบ database ตรวจข้ามระบบไม่ได้
+                  ใช้ <code>text</code> เผื่อเปลี่ยน identity provider ที่ id ไม่ใช่ UUID
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">venues</td>
+                <td><code>timezone</code> ไม่มี CHECK</td>
+                <td>
+                  CHECK ต้องเป็นนิพจน์ immutable ค้นรายชื่อ timezone ของระบบไม่ได้
+                  service จึงตรวจเองว่าเป็นชื่อที่มีอยู่จริง เช่น Asia/Bangkok
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">seat_maps</td>
+                <td><code>UNIQUE (venue_id, version)</code></td>
+                <td>
+                  เลขรุ่นห้ามซ้ำในสถานที่เดียวกัน และเพราะขึ้นต้นด้วย <code>venue_id</code>
+                  จึงไม่ต้องสร้าง index แยกให้ FK
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">seat_maps</td>
+                <td><code>UNIQUE (seat_map_id, venue_id)</code></td>
+                <td>
+                  ดูซ้ำซ้อนกับ PK แต่ showtimes ต้องทำ
+                  <code>FK (seat_map_id, venue_id)</code> เพื่อบังคับว่าผังเป็นของสถานที่เดียวกับรอบ
+                  และ Postgres กำหนดว่าปลายทางของ FK ต้องมี UNIQUE ตรงกันทุกคอลัมน์
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">seat_maps</td>
+                <td><code>seat_maps_locked_at_matches_status</code></td>
+                <td>LOCKED ⇔ มี <code>locked_at</code> กันข้อมูลขัดกันเอง เช่น LOCKED แต่ไม่รู้ว่าล็อกเมื่อไร</td>
+              </tr>
+              <tr>
+                <td class="mono">seat_map_sections</td>
+                <td>PK <code>(seat_map_id, section_code)</code> แทน uuid</td>
+                <td>
+                  โซนระบุตัวด้วย "ผังไหน + รหัสอะไร" อยู่แล้ว และทำให้เก้าอี้ทำ composite FK
+                  มาได้ ถ้าโซนใช้ uuid จะบังคับไม่ได้ว่าเก้าอี้อยู่ในโซนของผังเดียวกัน
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">seat_map_seats</td>
+                <td>
+                  <code>FK (seat_map_id, section_code)</code>
+                  ไม่มี FK ไปหา seat_maps ตรงๆ
+                </td>
+                <td>
+                  ถ้า FK แค่ <code>section_code</code> จะชี้ไปโซน A ของผังไหนก็ได้
+                  และไม่ต้อง FK ไปหาผังซ้ำ เพราะโซนต้องมีผังอยู่จริงอยู่แล้ว
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">seat_map_seats</td>
+                <td>
+                  <code>seat_map_seats_position_key</code>
+                  UNIQUE รวม <code>section_code</code>
+                </td>
+                <td>
+                  สถานที่จริงมี "แถว A ที่ 12" ซ้ำกันในหลายโซน และเพราะขึ้นต้นด้วย
+                  <code>(seat_map_id, section_code)</code> จึงใช้เป็น index ของ FK ได้
+                  ตอนลบโซน
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>ยังไม่ได้ทำ</h3>
+        <p>
+          trigger <code>seat_map_locked</code> (ผังที่ล็อกแล้วห้ามแก้ผัง โซน และเก้าอี้)
+          ต้องตรวจข้ามสามตาราง จึงแยกเป็น migration หลังสร้างครบทั้งสามตาราง
+        </p>
       </section>
     </div>
   </body>
