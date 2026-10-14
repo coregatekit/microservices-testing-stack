@@ -20,6 +20,12 @@ run = "bun run --watch src/index.ts"
 dir = "services/bff"
 run = "bun test"
 
+[tasks."catalog:migrate"]
+description = "Run goose against the catalog database, e.g. `mise run catalog:migrate up`"
+dir = "services/catalog"
+env = { GOOSE_DRIVER = "postgres", GOOSE_DBSTRING = "{{env.CATALOG_DATABASE_URL}}", GOOSE_MIGRATION_DIR = "db/migrations" }
+run = "goose"
+
 [tasks."partner:webhook"]
 description = "Open webhook to receive events from the mock partner service"
 dir = "services/mock-partner"
