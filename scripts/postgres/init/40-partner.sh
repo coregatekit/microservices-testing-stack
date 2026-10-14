@@ -10,10 +10,18 @@ CREATE DATABASE partner OWNER migrator;
 REVOKE ALL ON DATABASE partner FROM PUBLIC;
 GRANT CONNECT ON DATABASE partner TO partner_service;
 
+-- Unqualified names resolve to the service schema for both roles.
+ALTER ROLE migrator        IN DATABASE partner SET search_path = partner;
+ALTER ROLE partner_service IN DATABASE partner SET search_path = partner;
+
 \connect partner
 
-ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
+DROP SCHEMA public;
+CREATE SCHEMA partner AUTHORIZATION migrator;
+GRANT USAGE ON SCHEMA partner TO partner_service;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA partner
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO partner_service;
-ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
+ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA partner
   GRANT USAGE, SELECT ON SEQUENCES TO partner_service;
 SQL

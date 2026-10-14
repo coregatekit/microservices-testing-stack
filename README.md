@@ -132,7 +132,8 @@ Postgres สำหรับพัฒนาบนเครื่อง รัน�
 
 - `migrator` เป็นเจ้าของทุก database ใช้รัน migration (DDL) เท่านั้น
 - app user อ่านเขียนข้อมูลได้ แต่สร้าง แก้ หรือลบตารางไม่ได้ และเข้า database ของ service อื่นไม่ได้
-- role และ database สร้างโดย script ใน [scripts/postgres/init/](scripts/postgres/init/)
+- แต่ละ database ไม่มี schema `public` ใช้ schema ชื่อเดียวกับ database แทน (เช่น `catalog.venues`) และตั้ง `search_path` ให้ทั้ง `migrator` และ app user แล้ว จึงเขียน SQL โดยไม่ต้องใส่ชื่อ schema
+- role, database และ schema สร้างโดย script ใน [scripts/postgres/init/](scripts/postgres/init/)
 
 ### Setup ครั้งแรก
 
