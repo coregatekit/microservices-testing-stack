@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/fs"
 	"strings"
 	"testing"
 )
@@ -29,5 +30,20 @@ func TestRun_RejectsBadInput(t *testing.T) {
 				t.Fatalf("run(%q) error = %q, want it to contain %q", tc.args, err, tc.wantErr)
 			}
 		})
+	}
+}
+
+func TestMigrationFS_HasSQLFiles(t *testing.T) {
+	fsys, err := migrationsFS()
+	if err != nil {
+		t.Fatalf("migrationsFS() error = %v", err)
+	}
+
+	files, err := fs.Glob(fsys, "*.sql")
+	if err != nil {
+		t.Fatalf("fs.Glob() error = %v", err)
+	}
+	if len(files) == 0 {
+		t.Fatalf("no .sql files embedded; check the //go:embed pattern in db/migrations.go")
 	}
 }
