@@ -1647,7 +1647,7 @@
         <p>
           ส่วนนี้บันทึกว่าทำไม schema ถึงออกมาหน้าตาแบบนี้ สำหรับคนที่จะเขียน migration
           หรือแก้ตารางต่อ กลุ่มสถานที่ทำเป็น migration แล้ว (<code>00001</code>–<code>00005</code>)
-          กลุ่มงานทำแล้ว <code>events</code> และ <code>showtimes</code> (<code>00006</code>–<code>00007</code>)
+          กลุ่มงานทำแล้ว <code>events</code>, <code>showtimes</code> และ <code>ticket_tiers</code> (<code>00006</code>–<code>00008</code>)
           ส่วนตารางอื่นของกลุ่มงานและ outbox ยังเป็นแบบร่าง
         </p>
 
@@ -1903,6 +1903,21 @@
                 <td class="mono">showtimes</td>
                 <td>"เวลาต้องอยู่ในอนาคต" ไม่ใช้ CHECK</td>
                 <td><code>now()</code> ไม่ใช่ immutable แถวที่ถูกวันนี้จะผิดในวันหน้า service ตรวจตอนสร้างหรือเลื่อนรอบ ส่วน CHECK ตรวจแค่ <code>ends_at &gt; starts_at</code></td>
+              </tr>
+              <tr>
+                <td class="mono">ticket_tiers</td>
+                <td>PK <code>(event_id, tier_code)</code> แทน uuid</td>
+                <td><code>tier_sections</code> จะอ้างด้วยคู่นี้ ทำให้ FK บังคับได้ว่าโซนจับคู่กับระดับราคาของงานเดียวกันเท่านั้น และ PK ขึ้นต้นด้วย <code>event_id</code> จึงใช้เป็น index ของ FK ตอน CASCADE ได้</td>
+              </tr>
+              <tr>
+                <td class="mono">ticket_tiers</td>
+                <td><code>price_minor bigint</code> หน่วยสตางค์</td>
+                <td>จำนวนเต็มไม่มีปัญหาปัดทศนิยมแบบ float และ payment provider ส่วนใหญ่รับหน่วยย่อย สกุลเงินอยู่ที่ <code>events.currency</code> ทุกระดับในงานจึงสกุลเดียวกันเสมอ</td>
+              </tr>
+              <tr>
+                <td class="mono">ticket_tiers</td>
+                <td><code>price_minor &gt; 0</code></td>
+                <td>flow จองต้องผ่าน payment เสมอ ตั๋วราคา 0 จะค้างที่ขั้นจ่ายเงิน ถ้าจะรองรับงานฟรีต้องแก้ booking ด้วย</td>
               </tr>
             </tbody>
           </table>
