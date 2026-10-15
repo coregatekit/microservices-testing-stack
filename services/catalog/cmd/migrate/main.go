@@ -46,7 +46,7 @@ func run(ctx context.Context, args []string) error {
 	}
 
 	// Get the migrations filesystem from the embedded migrations
-	fsys, err := fs.Sub(db.Migrations, "migrations")
+	fsys, err := migrationsFS()
 	if err != nil {
 		return err
 	}
@@ -75,6 +75,10 @@ func run(ctx context.Context, args []string) error {
 		return printStatus(ctx, provider)
 	}
 	return applyUp(ctx, provider)
+}
+
+func migrationsFS() (fs.FS, error) {
+	return fs.Sub(db.Migrations, "migrations")
 }
 
 func printStatus(ctx context.Context, provider *goose.Provider) error {
