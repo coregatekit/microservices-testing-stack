@@ -1648,6 +1648,7 @@
           ส่วนนี้บันทึกว่าทำไม schema ถึงออกมาหน้าตาแบบนี้ สำหรับคนที่จะเขียน migration
           หรือแก้ตารางต่อ กลุ่มสถานที่ทำเป็น migration แล้ว (<code>00001</code>–<code>00005</code>)
           กลุ่มงานทำครบแล้ว (<code>00006</code>–<code>00009</code>)
+          trigger <code>seat_map_locked</code> อยู่ใน <code>00010</code>
           ส่วน outbox ยังเป็นแบบร่าง
         </p>
 
@@ -1943,10 +1944,58 @@
           </table>
         </div>
 
+        <h3>Trigger seat_map_locked (seat_maps, seat_map_sections, seat_map_seats)</h3>
+        <p>
+          ผังที่ล็อกแล้วห้ามแก้ผัง โซน และเก้าอี้ ห้ามปลดล็อก และห้ามลบผัง
+          ถ้าอยากเปลี่ยนต้อง INSERT ผัง DRAFT รุ่นใหม่แล้วคัดลอกโซนและเก้าอี้ตามไป
+        </p>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ส่วน</th>
+                <th>ทำแบบนี้</th>
+                <th>เพราะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">seat_map_locked</td>
+                <td>ใช้ trigger ไม่ใช่ CHECK</td>
+                <td>CHECK ดูได้แค่แถวตัวเอง แต่การแก้โซนหรือเก้าอี้ต้องดูสถานะของผังซึ่งอยู่อีกตาราง</td>
+              </tr>
+              <tr>
+                <td class="mono">seat_map_locked</td>
+                <td><code>seat_maps</code> ดูแค่ <code>OLD.status</code> และห้ามทั้ง UPDATE กับ DELETE</td>
+                <td>สิ่งที่ห้ามคือแตะผังที่เคยล็อก ส่วน DRAFT → LOCKED ยังทำได้ ห้าม DELETE ด้วยเพราะ RESTRICT จาก <code>showtimes</code> กันได้แค่ผังที่มีรอบใช้อยู่</td>
+              </tr>
+              <tr>
+                <td class="mono">seat_map_locked</td>
+                <td>โซนและเก้าอี้ใช้ฟังก์ชันเดียวกัน UPDATE เช็กทั้ง OLD และ NEW</td>
+                <td>ทั้งสองตารางมี <code>seat_map_id</code> เหมือนกัน เช็กสองฝั่งเพื่อกันการย้ายแถวออกจากหรือเข้าไปในผังที่ล็อก</td>
+              </tr>
+              <tr>
+                <td class="mono">seat_map_locked</td>
+                <td><code>SELECT ... FOR SHARE</code> และไม่กรอง status ใน WHERE</td>
+                <td>กันกรณีแย่งกัน ถ้าอีก transaction กำลังล็อกผัง คำสั่งนี้จะรอแล้วอ่านสถานะล่าสุด ถ้าไม่ล็อกทั้งสองฝั่งเห็น DRAFT แล้วเก้าอี้ใหม่จะหลุดเข้าผังที่ล็อก (FK ล็อกแม่แบบ KEY SHARE ซึ่งไม่ขวาง UPDATE status)</td>
+              </tr>
+              <tr>
+                <td class="mono">seat_map_locked</td>
+                <td>error ใส่ <code>CONSTRAINT = 'seat_map_locked'</code> และ ERRCODE 55000</td>
+                <td>service แยก error นี้ได้จากชื่อเหมือน constraint ปกติ (pgx: <code>ConstraintName</code>) 55000 แปลว่าข้อมูลอยู่ในสถานะที่ทำสิ่งนี้ไม่ได้แล้ว</td>
+              </tr>
+              <tr>
+                <td class="mono">seat_map_locked</td>
+                <td>ไม่เจอผัง (NULL) ให้ผ่าน</td>
+                <td>ตอนลบผัง DRAFT แล้ว CASCADE ไปโซนและเก้าอี้ แถวผังถูกลบไปแล้วใน transaction เดียวกัน</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <h3>ยังไม่ได้ทำ</h3>
         <p>
-          trigger <code>seat_map_locked</code> (ผังที่ล็อกแล้วห้ามแก้ผัง โซน และเก้าอี้)
-          ต้องตรวจข้ามสามตาราง จึงแยกเป็น migration หลังสร้างครบทั้งสามตาราง
+          ตาราง <code>outbox</code> ยังเป็นแบบร่าง จะทำตอนเริ่มเขียน publisher
         </p>
       </section>
     </div>
