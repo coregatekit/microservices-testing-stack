@@ -932,7 +932,7 @@
               <text class="cn" x="956" y="153">status</text>
               <text class="ct" x="1148" y="153" text-anchor="end">text</text>
               <text class="cn" x="956" y="175">currency</text>
-              <text class="ct" x="1148" y="175" text-anchor="end">char(3)</text>
+              <text class="ct" x="1148" y="175" text-anchor="end">text</text>
               <rect class="zebra" x="901" y="182" width="258" height="22" />
               <text class="cn" x="956" y="197">sales_open_at</text>
               <text class="ct" x="1148" y="197" text-anchor="end">timestamptz</text>
@@ -944,7 +944,7 @@
               <text class="cn" x="956" y="263">version</text>
               <text class="ct" x="1148" y="263" text-anchor="end">bigint</text>
               <rect class="zebra" x="901" y="270" width="258" height="22" />
-              <text class="cn" x="956" y="285">cancelled_* / cancel_reason</text>
+              <text class="cn" x="956" y="285">cancelled_*</text>
               <text class="cn" x="956" y="307">created_* / updated_*</text>
             </g>
             <g class="tbl agg-event">
@@ -1647,7 +1647,8 @@
         <p>
           ส่วนนี้บันทึกว่าทำไม schema ถึงออกมาหน้าตาแบบนี้ สำหรับคนที่จะเขียน migration
           หรือแก้ตารางต่อ กลุ่มสถานที่ทำเป็น migration แล้ว (<code>00001</code>–<code>00005</code>)
-          ส่วนกลุ่มงานและ outbox ยังเป็นแบบร่าง
+          กลุ่มงานทำแล้วเฉพาะ <code>events</code> (<code>00006</code>)
+          ส่วนตารางอื่นของกลุ่มงานและ outbox ยังเป็นแบบร่าง
         </p>
 
         <h3>หลักที่ใช้กับทุกตาราง</h3>
@@ -1837,6 +1838,46 @@
                   <code>(seat_map_id, section_code)</code> จึงใช้เป็น index ของ FK ได้
                   ตอนลบโซน
                 </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>เหตุผลรายตาราง (กลุ่มงาน)</h3>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ตาราง</th>
+                <th>ทำแบบนี้</th>
+                <th>เพราะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">events</td>
+                <td><code>status</code> CHECK แค่ค่าที่อนุญาต</td>
+                <td>ลำดับการเปลี่ยนสถานะ (เดินหน้าอย่างเดียว) service เป็นคนตรวจ เพราะ CHECK เห็นแค่ค่าในแถวปัจจุบัน ไม่รู้ว่าก่อนหน้าเป็นสถานะอะไร</td>
+              </tr>
+              <tr>
+                <td class="mono">events</td>
+                <td><code>currency text</code> CHECK <code>^[A-Z]{3}$</code></td>
+                <td><code>char(3)</code> เติมช่องว่างท้ายให้เองแบบเงียบๆ ส่วน CHECK ปฏิเสธ <code>thb</code> หรือ <code>TH</code> ทันที ตั๋วทุกระดับของงานใช้สกุลเงินเดียวกันจึงเก็บที่งาน</td>
+              </tr>
+              <tr>
+                <td class="mono">events</td>
+                <td><code>events_sales_window_valid</code></td>
+                <td>booking ใช้ช่วงเปิด–ปิดขายตัดสินว่ายังจองได้ไหม ถ้าปิดก่อนหรือพร้อมเปิด ลูกค้าจะจองนอกช่วงขายหรือไม่มีช่วงให้ขาย</td>
+              </tr>
+              <tr>
+                <td class="mono">events</td>
+                <td><code>version</code> service เป็นคนบวก</td>
+                <td>ต้องบวกเมื่อ <code>showtimes</code> หรือ <code>ticket_tiers</code> เปลี่ยนด้วย ซึ่ง trigger ที่ <code>events</code> มองไม่เห็น booking ใช้ทิ้งจดหมายเก่า และ service ใช้กันแก้ทับกัน (<code>WHERE version = ?</code>)</td>
+              </tr>
+              <tr>
+                <td class="mono">events</td>
+                <td><code>cancelled_*</code> แยกจาก <code>updated_*</code></td>
+                <td><code>updated_*</code> ถูกทับเมื่อแก้ครั้งถัดไป ส่วน <code>events_cancelled_fields_match_status</code> ใช้ <code>num_nonnulls</code> บังคับว่า CANCELLED ต้องมีครบ 3 ช่อง สถานะอื่นต้องว่างทั้ง 3 ช่อง</td>
               </tr>
             </tbody>
           </table>
