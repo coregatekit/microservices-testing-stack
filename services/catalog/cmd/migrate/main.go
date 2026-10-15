@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -11,6 +12,8 @@ import (
 	"syscall"
 
 	"github.com/coregatekit/ticketlite/services/catalog/db"
+	"github.com/pressly/goose/v3"
+	"github.com/pressly/goose/v3/lock"
 )
 
 func main() {
@@ -47,7 +50,43 @@ func run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_ = fsys
+
+	conn, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	locker, err := lock.NewPostgresSessionLocker()
+	if err != nil {
+		return err
+	}
+
+	provider, err := goose.NewProvider(goose.DialectPostgres, conn, fsys, goose.WithSessionLocker(locker))
+	if err != nil {
+		return err
+	}
+
+	if cmd == "status" {
+		return printStatus(ctx, provider)
+	}
+
+	return nil
+}
+
+func printStatus(ctx context.Context, provider *goose.Provider) error {
+	statuses, err := provider.Status(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, s := range statuses {
+		if s.State == goose.StateApplied {
+			slog.Info("applied", "migration", s.Source.Path, "applied_at", s.AppliedAt)
+		} else {
+			slog.Info("pending", "migration", s.Source.Path)
+		}
+	}
 
 	return nil
 }
