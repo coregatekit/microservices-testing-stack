@@ -71,7 +71,7 @@ func run(ctx context.Context) error {
 		return printStatus(ctx, provider)
 	}
 
-	return nil
+	return applyUp(ctx, provider)
 }
 
 func printStatus(ctx context.Context, provider *goose.Provider) error {
@@ -88,5 +88,27 @@ func printStatus(ctx context.Context, provider *goose.Provider) error {
 		}
 	}
 
+	return nil
+}
+
+func applyUp(ctx context.Context, provider *goose.Provider) error {
+	// ได้เฉพาะไฟล์ที่รันในครั้งนี้ ถ้าไม่มีอะไรค้างจะได้ list ว่าง
+	results, err := provider.Up(ctx)
+	// log ก่อนเช็ค err: ถ้าไฟล์ที่ 3 พัง ไฟล์ 1-2 ผ่านไปแล้ว
+	// results จะมีทั้งตัวที่ผ่านและตัวที่พัง คนอ่าน log จะรู้ว่าค้างที่ไฟล์ไหน
+	for _, r := range results {
+		slog.Info("applied", "migration", r.Source.Path, "duration", r.Duration)
+	}
+	if err != nil {
+		return err
+	}
+
+	// เวลา deploy อยากรู้ว่าตอนนี้ database อยู่ version ไหน
+	version, err := provider.GetDBVersion(ctx)
+	if err != nil {
+		return err
+	}
+
+	slog.Info("database is up to date", "version", version, "applied", len(results))
 	return nil
 }
