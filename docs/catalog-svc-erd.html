@@ -1649,7 +1649,7 @@
           หรือแก้ตารางต่อ กลุ่มสถานที่ทำเป็น migration แล้ว (<code>00001</code>–<code>00005</code>)
           กลุ่มงานทำครบแล้ว (<code>00006</code>–<code>00009</code>)
           trigger <code>seat_map_locked</code> อยู่ใน <code>00010</code>
-          ส่วน outbox ยังเป็นแบบร่าง
+          และ outbox อยู่ใน <code>00011</code>
         </p>
 
         <h3>หลักที่ใช้กับทุกตาราง</h3>
@@ -1993,9 +1993,57 @@
           </table>
         </div>
 
+        <h3>เหตุผลรายตาราง (กล่องจดหมายขาออก: outbox)</h3>
+        <div class="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ตาราง</th>
+                <th>ทำแบบนี้</th>
+                <th>เพราะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">outbox</td>
+                <td><code>event_id uuid</code> uuidv7 ใช้เป็น Nats-Msg-Id</td>
+                <td>JetStream ตัดฉบับที่ส่งซ้ำได้ และฝั่งรับใช้เช็กว่าเคยรับแล้วหรือยัง เรียงตามเวลาจึง ORDER BY ส่งตามลำดับได้ และไม่ต้องมี <code>created_at</code> เพราะดึงเวลาได้จาก <code>uuid_extract_timestamp(event_id)</code></td>
+              </tr>
+              <tr>
+                <td class="mono">outbox</td>
+                <td><code>aggregate_id</code> ไม่มี FK ไป <code>events</code></td>
+                <td>จดหมายคือบันทึกว่าเกิดอะไรขึ้นแล้ว ต้องอยู่แม้งานถูกลบ และถ้ามี FK การลบงานจะติด</td>
+              </tr>
+              <tr>
+                <td class="mono">outbox</td>
+                <td>ไม่มี <code>UNIQUE (aggregate_id, aggregate_version)</code></td>
+                <td>การแก้ครั้งเดียวออกจดหมายได้หลายฉบับ เช่น ประกาศพร้อมเปิดขาย ทุกฉบับจึงมี version เดียวกัน</td>
+              </tr>
+              <tr>
+                <td class="mono">outbox</td>
+                <td><code>event_type</code> CHECK รายชื่อ, <code>payload jsonb</code> ต้องเป็น object</td>
+                <td>ประเภทใหม่ต้องผ่าน migration ดีกว่าพิมพ์ผิดแล้วฝั่งรับไม่รู้จัก jsonb ตรวจ JSON ตอนเขียน และ object ทำให้เพิ่ม field ทีหลังได้โดยฝั่งรับไม่พัง</td>
+              </tr>
+              <tr>
+                <td class="mono">outbox</td>
+                <td><code>outbox_unpublished_idx</code> partial index</td>
+                <td>เก็บเฉพาะแถว <code>published_at IS NULL</code> ซึ่งมีไม่กี่ฉบับ index จึงเล็กแม้ตารางโต และเรียงตาม <code>event_id</code> ตรงกับ query ตัวส่ง (<code>ORDER BY event_id LIMIT … FOR UPDATE SKIP LOCKED</code>) รันตัวส่งหลายตัวได้</td>
+              </tr>
+              <tr>
+                <td class="mono">outbox</td>
+                <td>ลำดับจดหมายของงานเดียวกัน</td>
+                <td>service ต้อง <code>UPDATE events SET version = version + 1</code> ก่อน INSERT outbox สอง transaction ที่แก้งานเดียวกันจะต่อคิวที่แถว <code>events</code> ฉบับหลังจึงได้ <code>event_id</code> ใหม่กว่าเสมอ</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <h3>ยังไม่ได้ทำ</h3>
         <p>
-          ตาราง <code>outbox</code> ยังเป็นแบบร่าง จะทำตอนเริ่มเขียน publisher
+          งานลบจดหมายที่ส่งแล้วเกิน 7 วัน
+          (<code>DELETE FROM outbox WHERE published_at &lt; now() - interval '7 days'</code>)
+          จะทำพร้อมตัวส่ง ตอนนี้ยังไม่มี index ให้ <code>published_at</code>
+          เพราะรันวันละครั้ง อ่านทั้งตารางก็พอ
         </p>
       </section>
     </div>
