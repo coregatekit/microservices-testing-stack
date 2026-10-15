@@ -21,18 +21,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	if err := run(ctx); err != nil {
+	if err := run(ctx, os.Args[1:]); err != nil {
 		slog.Error("migrate failed", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context) error {
+func run(ctx context.Context, args []string) error {
 	cmd := "up"
-	if len(os.Args) > 1 {
-		// os.Args[0] is the program name
-		// os.Args[1] is the command to run (e.g., "up", "down")
-		cmd = os.Args[1]
+	if len(args) > 0 {
+		// args[0] is the command to run (e.g., "up", "down")
+		cmd = args[0]
 	}
 
 	// Validate the command before proceeding
