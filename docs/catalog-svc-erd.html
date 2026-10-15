@@ -1647,7 +1647,7 @@
         <p>
           ส่วนนี้บันทึกว่าทำไม schema ถึงออกมาหน้าตาแบบนี้ สำหรับคนที่จะเขียน migration
           หรือแก้ตารางต่อ กลุ่มสถานที่ทำเป็น migration แล้ว (<code>00001</code>–<code>00005</code>)
-          กลุ่มงานทำแล้วเฉพาะ <code>events</code> (<code>00006</code>)
+          กลุ่มงานทำแล้ว <code>events</code> และ <code>showtimes</code> (<code>00006</code>–<code>00007</code>)
           ส่วนตารางอื่นของกลุ่มงานและ outbox ยังเป็นแบบร่าง
         </p>
 
@@ -1878,6 +1878,31 @@
                 <td class="mono">events</td>
                 <td><code>cancelled_*</code> แยกจาก <code>updated_*</code></td>
                 <td><code>updated_*</code> ถูกทับเมื่อแก้ครั้งถัดไป ส่วน <code>events_cancelled_fields_match_status</code> ใช้ <code>num_nonnulls</code> บังคับว่า CANCELLED ต้องมีครบ 3 ช่อง สถานะอื่นต้องว่างทั้ง 3 ช่อง</td>
+              </tr>
+              <tr>
+                <td class="mono">showtimes</td>
+                <td>FK คู่ <code>(seat_map_id, venue_id)</code> → <code>seat_maps</code></td>
+                <td>บังคับว่าผังที่เลือกต้องเป็นของสถานที่เดียวกับรอบ ถ้า FK แค่ <code>seat_map_id</code> จะเก็บ venue ของ Hall A คู่กับผังของ Hall B ได้ ใช้ RESTRICT เพราะผังที่มีรอบใช้อยู่ห้ามหาย</td>
+              </tr>
+              <tr>
+                <td class="mono">showtimes</td>
+                <td><code>venue_id</code> ไม่มี FK ไป <code>venues</code> ตรงๆ</td>
+                <td>FK คู่ด้านบนรับประกันแล้ว เพราะคู่นี้ต้องมีใน <code>seat_maps</code> ซึ่งมี FK ไป <code>venues</code> อีกที เก็บ <code>venue_id</code> ไว้ในรอบเพื่อไม่ต้อง JOIN ผังทุกครั้ง</td>
+              </tr>
+              <tr>
+                <td class="mono">showtimes</td>
+                <td><code>showtimes_event_starts_at_key</code></td>
+                <td>งานเดียวกันไม่มีสองรอบเริ่มพร้อมกัน และขึ้นต้นด้วย <code>event_id</code> จึงใช้เป็น index ของ FK ตอน CASCADE ลบงานได้</td>
+              </tr>
+              <tr>
+                <td class="mono">showtimes</td>
+                <td><code>showtimes_seat_map_id_idx</code></td>
+                <td>ตอนลบผัง Postgres ต้องหารอบที่ใช้ผังนี้เพื่อเช็ก RESTRICT ไม่มี index จะอ่านทั้งตาราง UNIQUE ด้านบนขึ้นต้นด้วย <code>event_id</code> จึงใช้แทนไม่ได้</td>
+              </tr>
+              <tr>
+                <td class="mono">showtimes</td>
+                <td>"เวลาต้องอยู่ในอนาคต" ไม่ใช้ CHECK</td>
+                <td><code>now()</code> ไม่ใช่ immutable แถวที่ถูกวันนี้จะผิดในวันหน้า service ตรวจตอนสร้างหรือเลื่อนรอบ ส่วน CHECK ตรวจแค่ <code>ends_at &gt; starts_at</code></td>
               </tr>
             </tbody>
           </table>
