@@ -1647,8 +1647,8 @@
         <p>
           ส่วนนี้บันทึกว่าทำไม schema ถึงออกมาหน้าตาแบบนี้ สำหรับคนที่จะเขียน migration
           หรือแก้ตารางต่อ กลุ่มสถานที่ทำเป็น migration แล้ว (<code>00001</code>–<code>00005</code>)
-          กลุ่มงานทำแล้ว <code>events</code>, <code>showtimes</code> และ <code>ticket_tiers</code> (<code>00006</code>–<code>00008</code>)
-          ส่วนตารางอื่นของกลุ่มงานและ outbox ยังเป็นแบบร่าง
+          กลุ่มงานทำครบแล้ว (<code>00006</code>–<code>00009</code>)
+          ส่วน outbox ยังเป็นแบบร่าง
         </p>
 
         <h3>หลักที่ใช้กับทุกตาราง</h3>
@@ -1918,6 +1918,26 @@
                 <td class="mono">ticket_tiers</td>
                 <td><code>price_minor &gt; 0</code></td>
                 <td>flow จองต้องผ่าน payment เสมอ ตั๋วราคา 0 จะค้างที่ขั้นจ่ายเงิน ถ้าจะรองรับงานฟรีต้องแก้ booking ด้วย</td>
+              </tr>
+              <tr>
+                <td class="mono">tier_sections</td>
+                <td>FK คู่ <code>(event_id, tier_code)</code> ไม่มี FK ไป <code>events</code> ตรงๆ</td>
+                <td>ระดับราคาต้องเป็นของงานเดียวกัน ถ้า FK แค่ <code>tier_code</code> จะชี้ไป VIP ของงานไหนก็ได้ และคู่นี้ต้องมีใน <code>ticket_tiers</code> ซึ่งมี FK ไป <code>events</code> อยู่แล้ว</td>
+              </tr>
+              <tr>
+                <td class="mono">tier_sections</td>
+                <td><code>section_code</code> ไม่มี FK มีแค่ CHECK รูปแบบ</td>
+                <td>งานหนึ่งมีหลายรอบที่อาจใช้ผังต่างกัน ชื่อโซนต้องชี้ได้หลายผังพร้อมกัน service ตรวจตอนประกาศว่าทุกโซนมีราคาครบ CHECK รูปแบบเดียวกับ <code>seat_map_sections</code> เพื่อให้เทียบกันได้ตรงตัว</td>
+              </tr>
+              <tr>
+                <td class="mono">tier_sections</td>
+                <td>ไม่มี index แยกให้ FK</td>
+                <td>PK ขึ้นต้นด้วย <code>event_id</code> อยู่แล้ว และงานหนึ่งมีโซนแค่หลักสิบ ตอนลบระดับราคา Postgres หาจาก <code>event_id</code> แล้วกรองไม่กี่แถว index เพิ่มจะเป็นภาระตอนเขียนมากกว่า</td>
+              </tr>
+              <tr>
+                <td class="mono">tier_sections</td>
+                <td>ไม่มี audit columns</td>
+                <td>ผู้ใช้ไม่ได้แก้ทีละแถว ทั้งชุดถูกแก้ผ่านหน้าระดับราคาของงาน การเปลี่ยนจับคู่ทำให้ <code>events.version</code> เพิ่มขึ้นเหมือนการแก้อื่นในกลุ่มงาน</td>
               </tr>
             </tbody>
           </table>
