@@ -36,7 +36,8 @@ CREATE TABLE
 CREATE TRIGGER seat_maps_set_updated_at BEFORE
 UPDATE ON seat_maps FOR EACH ROW EXECUTE FUNCTION set_updated_at ();
 
--- กฎ "ผัง LOCKED ห้ามแก้หรือปลดล็อก" (seat_map_locked) ยังไม่ได้ใส่ เพราะต้องตรวจข้ามไปที่
+-- กฎ "ผัง LOCKED ห้ามแก้หรือปลดล็อก" (seat_map_locked) อยู่ใน 00010
+-- เพราะต้องตรวจข้ามไปที่ seat_map_sections และ seat_map_seats ด้วย
 -- seat_map_sections และ seat_map_seats ด้วย จะทำเป็น migration แยกหลังสร้างสองตารางนั้น
 -- +goose Down
 DROP TABLE seat_maps;
