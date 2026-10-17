@@ -3,8 +3,10 @@
 package main
 
 import (
+	"database/sql"
 	"testing"
 
+	"github.com/pressly/goose/v3"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
@@ -25,6 +27,26 @@ func startPostgres(t *testing.T) string {
 	}
 
 	return dsn
+}
+
+func newTestProvider(t *testing.T, dsn string) *goose.Provider {
+	fsys, err := migrationsFS()
+	if err != nil {
+		t.Fatalf("migrationsFS() error = %v", err)
+	}
+
+	conn, err := sql.Open("pgx", dsn)
+	if err != nil {
+		t.Fatalf("sql.Open error = %v", err)
+	}
+	t.Cleanup(func() { conn.Close() })
+
+	provider, err := goose.NewProvider(goose.DialectPostgres, conn, fsys)
+	if err != nil {
+		t.Fatalf("goose.NewProvider error = %v", err)
+	}
+
+	return provider
 }
 
 // TestRun_Integration tests the migration commands against a real PostgreSQL instance.
