@@ -26,3 +26,31 @@ func startPostgres(t *testing.T) string {
 
 	return dsn
 }
+
+// TestRun_Integration tests the migration commands against a real PostgreSQL instance.
+func TestRun_Integration(t *testing.T) {
+	dsn := startPostgres(t)
+	t.Setenv("MIGRATOR_DATABASE_URL", dsn)
+
+	for _, args := range [][]string{
+		{"status"},
+		{"up"},
+		{"up"},
+		{"status"},
+	} {
+		if err := run(t.Context(), args); err != nil {
+			t.Fatalf("run(%q) error = %v", args, err)
+		}
+	}
+
+	provider := newTestProvider(t, dsn)
+	got, err := provider.GetDBVersion(t.Context())
+	if err != nil {
+		t.Fatalf("GetDBVersion: %v", err)
+	}
+	sources := provider.ListSources()
+	want := sources[len(sources)-1].Version
+	if got != want {
+		t.Fatalf("db version = %d, want %d", got, want)
+	}
+}
