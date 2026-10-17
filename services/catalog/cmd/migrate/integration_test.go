@@ -54,3 +54,20 @@ func TestRun_Integration(t *testing.T) {
 		t.Fatalf("db version = %d, want %d", got, want)
 	}
 }
+
+// TestMigrations_DownAndUpAgain tests that migrations can be applied, rolled back to version 0, and then applied again successfully.
+func TestMigrations_DownAndUpAgain(t *testing.T) {
+	dsn := startPostgres(t)
+	provider := newTestProvider(t, dsn)
+	ctx := t.Context()
+
+	if _, err := provider.Up(ctx); err != nil {
+		t.Fatalf("first up: %v", err)
+	}
+	if _, err := provider.DownTo(ctx, 0); err != nil {
+		t.Fatalf("down to 0: %v", err)
+	}
+	if _, err := provider.Up(ctx); err != nil {
+		t.Fatalf("up after down: %v", err)
+	}
+}
