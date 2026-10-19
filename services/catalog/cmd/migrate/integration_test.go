@@ -6,28 +6,9 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/coregatekit/ticketlite/services/catalog/internal/testdb"
 	"github.com/pressly/goose/v3"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
-
-// startPostgres is a helper function to start a PostgreSQL instance for integration tests.
-func startPostgres(t *testing.T) string {
-	t.Helper()
-
-	ctr, err := postgres.Run(t.Context(), "postgres:18.6", postgres.WithDatabase("catalog"), postgres.BasicWaitStrategies())
-	testcontainers.CleanupContainer(t, ctr)
-	if err != nil {
-		t.Fatalf("start postgres: %v", err)
-	}
-
-	dsn, err := ctr.ConnectionString(t.Context(), "sslmode=disable")
-	if err != nil {
-		t.Fatalf("connection string: %v", err)
-	}
-
-	return dsn
-}
 
 func newTestProvider(t *testing.T, dsn string) *goose.Provider {
 	fsys, err := migrationsFS()
@@ -51,7 +32,7 @@ func newTestProvider(t *testing.T, dsn string) *goose.Provider {
 
 // TestRun_Integration tests the migration commands against a real PostgreSQL instance.
 func TestRun_Integration(t *testing.T) {
-	dsn := startPostgres(t)
+	dsn := testdb.StartPostgres(t)
 	t.Setenv("MIGRATOR_DATABASE_URL", dsn)
 
 	for _, args := range [][]string{
@@ -79,7 +60,7 @@ func TestRun_Integration(t *testing.T) {
 
 // TestMigrations_DownAndUpAgain tests that migrations can be applied, rolled back to version 0, and then applied again successfully.
 func TestMigrations_DownAndUpAgain(t *testing.T) {
-	dsn := startPostgres(t)
+	dsn := testdb.StartPostgres(t)
 	provider := newTestProvider(t, dsn)
 	ctx := t.Context()
 
