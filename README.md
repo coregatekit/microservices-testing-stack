@@ -122,13 +122,13 @@ Postgres สำหรับพัฒนาบนเครื่อง รัน�
 
 ทุก service มี database และ app user ของตัวเอง ส่วน `migrator` ใช้ร่วมกันทุก service
 
-| Database       | App user (DML เท่านั้น)  | ใช้โดย            |
-| -------------- | ----------------------- | ---------------- |
-| `catalog`      | `catalog_service`       | catalog          |
-| `booking`      | `booking_service`       | booking          |
-| `payment`      | `payment_service`       | payment          |
-| `partner`      | `partner_service`       | partner-api      |
-| `notification` | `notification_service`  | notification     |
+| Database       | App user (DML เท่านั้น) | ใช้โดย       |
+| -------------- | ----------------------- | ------------ |
+| `catalog`      | `catalog_service`       | catalog      |
+| `booking`      | `booking_service`       | booking      |
+| `payment`      | `payment_service`       | payment      |
+| `partner`      | `partner_service`       | partner-api  |
+| `notification` | `notification_service`  | notification |
 
 - `migrator` เป็นเจ้าของทุก database ใช้รัน migration (DDL) เท่านั้น
 - app user อ่านเขียนข้อมูลได้ แต่สร้าง แก้ หรือลบตารางไม่ได้ และเข้า database ของ service อื่นไม่ได้
@@ -173,18 +173,18 @@ make db-up
 
 รัน `make` เพื่อดูรายการคำสั่งทั้งหมด คำสั่งที่ทำงานกับ service ใด service หนึ่งต้องระบุ `SVC` เสมอ
 
-| คำสั่ง                                               | ความหมาย                                            |
-| ---------------------------------------------------- | --------------------------------------------------- |
-| `make db-up`                                         | เปิด Postgres                                       |
-| `make db-down`                                       | ปิด Postgres (ข้อมูลยังอยู่)                         |
-| `make db-reset`                                      | ⚠️ ลบข้อมูลทั้งหมด แล้วรัน init script ใหม่           |
-| `make db-psql SVC=catalog`                           | เปิด psql ที่ database ของ service                   |
+| คำสั่ง                                               | ความหมาย                                                   |
+| ---------------------------------------------------- | ---------------------------------------------------------- |
+| `make db-up`                                         | เปิด Postgres                                              |
+| `make db-down`                                       | ปิด Postgres (ข้อมูลยังอยู่)                               |
+| `make db-reset`                                      | ⚠️ ลบข้อมูลทั้งหมด แล้วรัน init script ใหม่                |
+| `make db-psql SVC=catalog`                           | เปิด psql ที่ database ของ service                         |
 | `make migrate-create SVC=catalog NAME=create_venues` | สร้างไฟล์ migration ใหม่ใน `services/<svc>/db/migrations/` |
-| `make migrate-up SVC=catalog`                        | รัน migration ที่ยังไม่ได้รันทั้งหมด                 |
-| `make migrate-down SVC=catalog`                      | ย้อน migration ล่าสุด 1 ไฟล์                         |
-| `make migrate-status SVC=catalog`                    | ดูว่า migration ไหนรันแล้ว ไหนยัง                   |
-| `make migrate-redo SVC=catalog`                      | down แล้ว up migration ล่าสุด                        |
-| `make migrate-validate SVC=catalog`                  | ตรวจไฟล์ migration โดยไม่ต้องต่อ database             |
+| `make migrate-up SVC=catalog`                        | รัน migration ที่ยังไม่ได้รันทั้งหมด                       |
+| `make migrate-down SVC=catalog`                      | ย้อน migration ล่าสุด 1 ไฟล์                               |
+| `make migrate-status SVC=catalog`                    | ดูว่า migration ไหนรันแล้ว ไหนยัง                          |
+| `make migrate-redo SVC=catalog`                      | down แล้ว up migration ล่าสุด                              |
+| `make migrate-validate SVC=catalog`                  | ตรวจไฟล์ migration โดยไม่ต้องต่อ database                  |
 
 ### กติกา migration
 
@@ -202,3 +202,15 @@ dir = "services/booking"
 env = { GOOSE_DRIVER = "postgres", GOOSE_DBSTRING = "{{env.MIGRATOR_DATABASE_URL_BASE}}/booking?sslmode=disable", GOOSE_MIGRATION_DIR = "db/migrations" }
 run = "goose"
 ```
+
+## Queries (sqlc)
+
+query ของแต่ละ service เขียนเป็น SQL ใน `services/<svc>/db/queries/` แล้วใช้ [sqlc](https://docs.sqlc.dev) สร้างโค้ด Go ไว้ใน `services/<svc>/internal/store/` (ห้ามแก้ไฟล์ในนั้นด้วยมือ)
+
+```bash
+cd services/catalog
+sqlc generate   # สร้างโค้ดใหม่หลังแก้ query หรือ migration
+sqlc diff       # ตรวจว่าโค้ดที่ commit ตรงกับ SQL
+```
+
+📖 กฎ สูตร และ checklist การเขียน query: [SQLC_INSTRUCTIONS.md](/SQLC_INSTRUCTIONS.md)
