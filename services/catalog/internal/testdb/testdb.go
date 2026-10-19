@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/coregatekit/ticketlite/services/catalog/db"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/testcontainers/testcontainers-go"
@@ -54,4 +55,20 @@ func Migrate(t testing.TB, dsn string) {
 	if _, err := provider.Up(t.Context()); err != nil {
 		t.Fatalf("migrate error: %v", err)
 	}
+}
+
+// NewPool starts Postgres, applies migrations, and returns a pool connected to it.
+func NewPool(t testing.TB) *pgxpool.Pool {
+	t.Helper()
+
+	dsn := StartPostgres(t)
+	Migrate(t, dsn)
+
+	pool, err := pgxpool.New(t.Context(), dsn)
+	if err != nil {
+		t.Fatalf("pgxpool.New error: %v", err)
+	}
+
+	t.Cleanup(pool.Close)
+	return pool
 }
