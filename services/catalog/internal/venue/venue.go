@@ -64,6 +64,10 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 	if in.Name == "" {
 		return Venue{}, fmt.Errorf("%w: name is required", ErrInvalid)
 	}
+	in.Address = strings.TrimSpace(in.Address)
+	if in.Address == "" {
+		return Venue{}, fmt.Errorf("%w: address is required", ErrInvalid)
+	}
 	return Venue{}, nil
 }
 
