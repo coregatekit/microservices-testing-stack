@@ -45,3 +45,11 @@ migrate-redo: require-svc ## Roll back and re-apply the latest migration (unmerg
 
 migrate-validate: require-svc ## Check migration files without connecting to the database
 	mise run $(SVC):migrate validate
+
+# --- Test ---------------------------------------------------------------
+
+test: require-svc ## Run all tests for the specified service
+	cd services/$(SVC) && go test ./...
+
+test-integration: require-svc ## Run integration tests for the specified service
+	cd services/$(SVC) && go test -tags=integration ./...
