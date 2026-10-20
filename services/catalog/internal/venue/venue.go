@@ -1,9 +1,12 @@
 package venue
 
 import (
+	"context"
 	"errors"
 	"time"
 	"uuid"
+
+	"github.com/coregatekit/ticketlite/services/catalog/internal/store"
 )
 
 var (
@@ -32,4 +35,10 @@ type CreateInput struct {
 	Name     string
 	Address  string
 	Timezone string
+}
+
+type Queries interface {
+	CreateVenue(ctx context.Context, arg store.CreateVenueParams) (store.Venue, error)
+	GetVenue(ctx context.Context, arg store.GetVenueParams) (store.Venue, error)
+	ListVenuesByOrganizer(ctx context.Context, organizerID string) ([]store.Venue, error)
 }
