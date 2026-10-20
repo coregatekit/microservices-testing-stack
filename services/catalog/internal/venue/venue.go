@@ -10,6 +10,7 @@ package venue
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,6 +59,9 @@ func NewService(q Queries) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venue, error) {
+	if in.Name == "" {
+		return Venue{}, fmt.Errorf("%w: name is required", ErrInvalid)
+	}
 	return Venue{}, nil
 }
 
