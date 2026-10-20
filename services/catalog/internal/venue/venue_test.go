@@ -23,6 +23,7 @@ func TestCreate_Invalid(t *testing.T) {
 		{"BlankAddress", venue.CreateInput{Name: "a", Address: "   ", Timezone: "Asia/Bangkok"}},
 		{"EmptyTimezone", venue.CreateInput{Name: "a", Address: "a", Timezone: ""}},
 		{"TimezoneMustNotBeLocal", venue.CreateInput{Name: "a", Address: "a", Timezone: "Local"}},
+		{"TimezoneMustReturnErrorWhenInvalid", venue.CreateInput{Name: "a", Address: "a", Timezone: "Mars/Olympus"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
