@@ -3,11 +3,13 @@
 package store_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/coregatekit/ticketlite/services/catalog/internal/store"
 	"github.com/coregatekit/ticketlite/services/catalog/internal/testdb"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 // newOrganizerID generates a new unique organizer ID for testing purposes.
@@ -60,6 +62,19 @@ func TestVenueQueries(t *testing.T) {
 		}
 		if got != created {
 			t.Errorf("GetVenue = %+v, want %+v", got, created)
+		}
+	})
+
+	t.Run("GetFromOtherOrganizer", func(t *testing.T) {
+		created := createVenue(t, q, newOrganizerID(), "Hall B")
+
+		_, err := q.GetVenue(t.Context(), store.GetVenueParams{
+			VenueID:     created.VenueID,
+			OrganizerID: newOrganizerID(),
+		})
+
+		if !errors.Is(err, pgx.ErrNoRows) {
+			t.Fatalf("GetVenue with other organizer: err = %v, want pgx.ErrNoRows", err)
 		}
 	})
 }
