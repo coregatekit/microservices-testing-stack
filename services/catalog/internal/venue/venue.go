@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"time"
-	"uuid"
+
+	"github.com/google/uuid"
 
 	"github.com/coregatekit/ticketlite/services/catalog/internal/store"
 )
