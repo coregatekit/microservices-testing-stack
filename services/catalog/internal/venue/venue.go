@@ -75,6 +75,9 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 	if in.Timezone == "Local" {
 		return Venue{}, fmt.Errorf("%w: timezone must not be Local", ErrInvalid)
 	}
+	if _, err := time.LoadLocation(in.Timezone); err != nil {
+		return Venue{}, fmt.Errorf("%w: invalid timezone", ErrInvalid)
+	}
 	return Venue{}, nil
 }
 
