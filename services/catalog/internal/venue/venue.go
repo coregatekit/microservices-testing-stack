@@ -42,3 +42,13 @@ type Queries interface {
 	GetVenue(ctx context.Context, arg store.GetVenueParams) (store.Venue, error)
 	ListVenuesByOrganizer(ctx context.Context, organizerID string) ([]store.Venue, error)
 }
+
+type Service struct{ q Queries }
+
+func NewService(q Queries) *Service {
+	return &Service{q: q}
+}
+
+func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venue, error)
+func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, error)
+func (s *Service) List(ctx context.Context, actor Actor) ([]Venue, error)
