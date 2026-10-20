@@ -98,4 +98,16 @@ func TestVenueQueries(t *testing.T) {
 			t.Errorf("ListVenuesByOrganizer[1] = %+v, want %+v", got[1], second)
 		}
 	})
+
+	t.Run("ListEmpty", func(t *testing.T) {
+		org := newOrganizerID()
+
+		got, err := q.ListVenuesByOrganizer(t.Context(), org)
+		if err != nil {
+			t.Fatalf("ListVenuesByOrganizer: %v", err)
+		}
+		if len(got) != 0 {
+			t.Errorf("ListVenuesByOrganizer = %d venues, want 0", len(got))
+		}
+	})
 }
