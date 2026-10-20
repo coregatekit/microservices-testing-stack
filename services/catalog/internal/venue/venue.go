@@ -68,6 +68,10 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 	if in.Address == "" {
 		return Venue{}, fmt.Errorf("%w: address is required", ErrInvalid)
 	}
+	in.Timezone = strings.TrimSpace(in.Timezone)
+	if in.Timezone == "" {
+		return Venue{}, fmt.Errorf("%w: timezone is required", ErrInvalid)
+	}
 	return Venue{}, nil
 }
 
