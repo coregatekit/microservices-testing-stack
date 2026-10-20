@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/coregatekit/ticketlite/services/catalog/internal/store"
+	"github.com/coregatekit/ticketlite/services/catalog/internal/testdb"
 	"github.com/google/uuid"
 )
 
@@ -30,4 +31,35 @@ func createVenue(t *testing.T, q *store.Queries, organizerID, name string) store
 	}
 
 	return venue
+}
+
+func TestVenueQueries(t *testing.T) {
+	pool := testdb.NewPool(t)
+	q := store.New(pool)
+
+	t.Run("CreateThenGet", func(t *testing.T) {
+		org := newOrganizerID()
+		created := createVenue(t, q, org, "Hall A")
+
+		if created.VenueID == uuid.Nil {
+			t.Error("VenueID is empty, want DB default uuidv7")
+		}
+		if created.CreatedBy != "user-1" || created.UpdatedBy != "user-1" {
+			t.Errorf("CreatedBy/UpdatedBy = %q/%q, want user-1/user-1", created.CreatedBy, created.UpdatedBy)
+		}
+		if created.CreatedAt.IsZero() || !created.CreatedAt.Equal(created.UpdatedAt) {
+			t.Errorf("CreatedAt = %v, UpdatedAt = %v, want same non-zero time", created.CreatedAt, created.UpdatedAt)
+		}
+
+		got, err := q.GetVenue(t.Context(), store.GetVenueParams{
+			VenueID:     created.VenueID,
+			OrganizerID: org,
+		})
+		if err != nil {
+			t.Fatalf("GetVenue: %v", err)
+		}
+		if got != created {
+			t.Errorf("GetVenue = %+v, want %+v", got, created)
+		}
+	})
 }
