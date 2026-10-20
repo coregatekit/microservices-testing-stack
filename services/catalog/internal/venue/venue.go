@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -59,6 +60,7 @@ func NewService(q Queries) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venue, error) {
+	in.Name = strings.TrimSpace(in.Name)
 	if in.Name == "" {
 		return Venue{}, fmt.Errorf("%w: name is required", ErrInvalid)
 	}
