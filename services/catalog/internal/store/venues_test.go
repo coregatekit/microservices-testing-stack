@@ -29,7 +29,7 @@ func createVenue(t *testing.T, q *store.Queries, organizerID, name string) store
 		Actor:       "user-1",
 	})
 	if err != nil {
-		t.Fatalf("q.CreateVenue error: %v", err)
+		t.Fatalf("q.CreateVenue: %v", err)
 	}
 
 	return venue
@@ -82,14 +82,14 @@ func TestVenueQueries(t *testing.T) {
 		org := newOrganizerID()
 		first := createVenue(t, q, org, "First")
 		second := createVenue(t, q, org, "Second")
-		_ = createVenue(t, q, newOrganizerID(), "Other Organizer Venue")
+		createVenue(t, q, newOrganizerID(), "Other Organizer Venue")
 
 		got, err := q.ListVenuesByOrganizer(t.Context(), org)
 		if err != nil {
 			t.Fatalf("ListVenuesByOrganizer: %v", err)
 		}
 		if len(got) != 2 {
-			t.Errorf("ListVenuesByOrganizer = %d venues, want 2", len(got))
+			t.Fatalf("ListVenuesByOrganizer = %d venues, want 2", len(got))
 		}
 		if got[0].VenueID != first.VenueID {
 			t.Errorf("ListVenuesByOrganizer[0] = %+v, want %+v", got[0], first)
