@@ -78,6 +78,15 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 	if _, err := time.LoadLocation(in.Timezone); err != nil {
 		return Venue{}, fmt.Errorf("%w: invalid timezone", ErrInvalid)
 	}
+
+	s.q.CreateVenue(ctx, store.CreateVenueParams{
+		OrganizerID: actor.OrganizerID,
+		Name:        in.Name,
+		Address:     in.Address,
+		Timezone:    in.Timezone,
+		Actor:       actor.UserID,
+	})
+
 	return Venue{}, nil
 }
 
