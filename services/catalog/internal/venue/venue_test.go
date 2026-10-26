@@ -41,6 +41,25 @@ func TestCreate_Invalid(t *testing.T) {
 	}
 }
 
+func TestCreate_Error(t *testing.T) {
+	t.Run("CreateVenueReturnsError", func(t *testing.T) {
+		q := &QueriesMock{
+			CreateVenueFunc: func(ctx context.Context, arg store.CreateVenueParams) (store.Venue, error) {
+				return store.Venue{}, errors.New("some error")
+			},
+		}
+		in := venue.CreateInput{
+			Name:     "Impact Arena",
+			Address:  "99 Muang Thong Thani, Nonthaburi",
+			Timezone: "Asia/Bangkok",
+		}
+		_, err := venue.NewService(q).Create(t.Context(), actor, in)
+		if err == nil {
+			t.Fatalf("Create returned err = nil, want non-nil")
+		}
+	})
+}
+
 func TestCreate_Success(t *testing.T) {
 	t.Run("ValidInput", func(t *testing.T) {
 		q := &QueriesMock{
