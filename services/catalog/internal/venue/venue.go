@@ -87,7 +87,10 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 		Actor:       actor.UserID,
 	}
 
-	_, _ = s.q.CreateVenue(ctx, input)
+	_, err := s.q.CreateVenue(ctx, input)
+	if err != nil {
+		return Venue{}, fmt.Errorf("%w: failed to create venue: %v", ErrInvalid, err)
+	}
 
 	return Venue{}, nil
 }
