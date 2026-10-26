@@ -1,9 +1,11 @@
 package venue_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
+	"github.com/coregatekit/ticketlite/services/catalog/internal/store"
 	"github.com/coregatekit/ticketlite/services/catalog/internal/venue"
 )
 
@@ -37,4 +39,39 @@ func TestCreate_Invalid(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCreate_Success(t *testing.T) {
+	t.Run("ValidInput", func(t *testing.T) {
+		q := &QueriesMock{
+			CreateVenueFunc: func(ctx context.Context, arg store.CreateVenueParams) (store.Venue, error) {
+				return store.Venue{}, nil
+			},
+		}
+		in := venue.CreateInput{
+			Name:     "  Impact Arena ",
+			Address:  "  99 Muang Thong Thani, Nonthaburi   ",
+			Timezone: "             Asia/Bangkok         ",
+		}
+
+		if _, err := venue.NewService(q).Create(t.Context(), actor, in); err != nil {
+			t.Fatalf("Create returned err = %v, want nil", err)
+		}
+
+		calls := q.CreateVenueCalls()
+		if len(calls) != 1 {
+			t.Fatalf("CreateVenue was called %d times, want 1", len(calls))
+		}
+
+		want := store.CreateVenueParams{
+			OrganizerID: actor.OrganizerID,
+			Name:        "Impact Arena",
+			Address:     "99 Muang Thong Thani, Nonthaburi",
+			Timezone:    "Asia/Bangkok",
+			Actor:       actor.UserID,
+		}
+		if got := calls[0].Arg; got != want {
+			t.Errorf("CreateVenue arg = %+v, want %+v", got, want)
+		}
+	})
 }
