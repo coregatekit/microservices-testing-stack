@@ -57,8 +57,8 @@ func TestCreate_Error(t *testing.T) {
 			Timezone: "Asia/Bangkok",
 		}
 		_, err := venue.NewService(q).Create(t.Context(), actor, in)
-		if err == nil {
-			t.Fatalf("Create returned err = nil, want non-nil")
+		if err == nil || errors.Is(err, venue.ErrInvalid) {
+			t.Fatalf("Create returned err = nil or ErrInvalid, want non-nil and not ErrInvalid")
 		}
 	})
 }
