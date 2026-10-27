@@ -214,3 +214,14 @@ sqlc diff       # ตรวจว่าโค้ดที่ commit ตรงก
 ```
 
 📖 กฎ สูตร และ checklist การเขียน query: [SQLC_INSTRUCTIONS.md](/SQLC_INSTRUCTIONS.md)
+
+## Testing (Go)
+
+test ของ service ที่เขียนด้วย Go ใช้แพ็กเกจ `testing` ของ standard library อย่างเดียว ไม่ใช้ assertion library ส่วน integration test แยกด้วย build tag `integration`
+
+```bash
+make test SVC=catalog              # เฉพาะ unit test
+make test-integration SVC=catalog  # unit test และ integration test (ต้องเปิด Docker)
+```
+
+📖 เหตุผลที่ไม่ใช้ assertion library และกติกาการเขียน test: [GO_TESTING.md](GO_TESTING.md)

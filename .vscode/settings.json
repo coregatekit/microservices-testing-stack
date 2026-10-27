@@ -1,3 +1,8 @@
 {
-    "gopls": { "build.buildFlags": ["-tags=integration"]}
+    "gopls": {
+        "build.buildFlags": [
+            "-tags=integration"
+        ]
+    },
+    "python.terminal.useEnvFile": true
 }
