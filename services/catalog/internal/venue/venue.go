@@ -87,12 +87,22 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 		Actor:       actor.UserID,
 	}
 
-	_, err := s.q.CreateVenue(ctx, input)
+	row, err := s.q.CreateVenue(ctx, input)
 	if err != nil {
 		return Venue{}, fmt.Errorf("%w: failed to create venue: %v", ErrInvalid, err)
 	}
 
-	return Venue{}, nil
+	return Venue{
+		ID:          row.VenueID,
+		OrganizerID: row.OrganizerID,
+		Name:        row.Name,
+		Address:     row.Address,
+		Timezone:    row.Timezone,
+		CreatedAt:   row.CreatedAt,
+		CreatedBy:   row.CreatedBy,
+		UpdatedAt:   row.UpdatedAt,
+		UpdatedBy:   row.UpdatedBy,
+	}, nil
 }
 
 func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, error) {
