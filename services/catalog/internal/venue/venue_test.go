@@ -130,33 +130,38 @@ func TestCreate_Success(t *testing.T) {
 			t.Fatalf("Create returned err = %v, want nil", err)
 		}
 
-		if got.ID == uuid.Nil || got.ID != row.VenueID {
-			t.Errorf("Create returned ID = %v, want %v", got.ID, row.VenueID)
-		}
-		if got.OrganizerID != row.OrganizerID {
-			t.Errorf("Create returned OrganizerID = %v, want %v", got.OrganizerID, row.OrganizerID)
-		}
-		if got.Name != row.Name {
-			t.Errorf("Create returned Name = %v, want %v", got.Name, row.Name)
-		}
-		if got.Address != row.Address {
-			t.Errorf("Create returned Address = %v, want %v", got.Address, row.Address)
-		}
-		if got.Timezone != row.Timezone {
-			t.Errorf("Create returned Timezone = %v, want %v", got.Timezone, row.Timezone)
-		}
-
-		if got.CreatedAt != row.CreatedAt {
-			t.Errorf("Create returned CreatedAt = %v, want %v", got.CreatedAt, row.CreatedAt)
-		}
-		if got.CreatedBy != row.CreatedBy {
-			t.Errorf("Create returned CreatedBy = %v, want %v", got.CreatedBy, row.CreatedBy)
-		}
-		if got.UpdatedAt != row.UpdatedAt {
-			t.Errorf("Create returned UpdatedAt = %v, want %v", got.UpdatedAt, row.UpdatedAt)
-		}
-		if got.UpdatedBy != row.UpdatedBy {
-			t.Errorf("Create returned UpdatedBy = %v, want %v", got.UpdatedBy, row.UpdatedBy)
-		}
+		assertVenueCreateResult(t, got, row)
 	})
+}
+
+func assertVenueCreateResult(t *testing.T, got venue.Venue, row store.Venue) {
+	t.Helper()
+
+	if got.ID == uuid.Nil || got.ID != row.VenueID {
+		t.Errorf("Create returned ID = %v, want %v", got.ID, row.VenueID)
+	}
+	if got.OrganizerID != row.OrganizerID {
+		t.Errorf("Create returned OrganizerID = %v, want %v", got.OrganizerID, row.OrganizerID)
+	}
+	if got.Name != row.Name {
+		t.Errorf("Create returned Name = %v, want %v", got.Name, row.Name)
+	}
+	if got.Address != row.Address {
+		t.Errorf("Create returned Address = %v, want %v", got.Address, row.Address)
+	}
+	if got.Timezone != row.Timezone {
+		t.Errorf("Create returned Timezone = %v, want %v", got.Timezone, row.Timezone)
+	}
+	if got.CreatedAt != row.CreatedAt {
+		t.Errorf("Create returned CreatedAt = %v, want %v", got.CreatedAt, row.CreatedAt)
+	}
+	if got.CreatedBy != row.CreatedBy {
+		t.Errorf("Create returned CreatedBy = %v, want %v", got.CreatedBy, row.CreatedBy)
+	}
+	if got.UpdatedAt != row.UpdatedAt {
+		t.Errorf("Create returned UpdatedAt = %v, want %v", got.UpdatedAt, row.UpdatedAt)
+	}
+	if got.UpdatedBy != row.UpdatedBy {
+		t.Errorf("Create returned UpdatedBy = %v, want %v", got.UpdatedBy, row.UpdatedBy)
+	}
 }
