@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/coregatekit/ticketlite/services/catalog/internal/store"
 	"github.com/coregatekit/ticketlite/services/catalog/internal/venue"
@@ -91,6 +94,52 @@ func TestCreate_Success(t *testing.T) {
 		}
 		if got := calls[0].Arg; got != want {
 			t.Errorf("CreateVenue arg = %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("ReturnsVenueOnSuccess", func(t *testing.T) {
+		venueID, _ := uuid.NewV7()
+		in := venue.CreateInput{
+			Name:     "  Impact Arena ",
+			Address:  "  99 Muang Thong Thani, Nonthaburi   ",
+			Timezone: "             Asia/Bangkok         ",
+		}
+		row := store.Venue{
+			VenueID:     venueID,
+			OrganizerID: "org-from-db",
+			Name:        "Inserted Name",
+			Address:     "Inserted Address",
+			Timezone:    "Asia/Tokyo",
+			CreatedAt:   time.Date(2026, 10, 26, 10, 0, 0, 0, time.UTC),
+			CreatedBy:   "creator-from-db",
+			UpdatedAt:   time.Date(2026, 10, 26, 10, 0, 0, 0, time.UTC),
+			UpdatedBy:   "updater-from-db",
+		}
+		q := &QueriesMock{
+			CreateVenueFunc: func(ctx context.Context, arg store.CreateVenueParams) (store.Venue, error) {
+				return row, nil
+			},
+		}
+
+		got, err := venue.NewService(q).Create(t.Context(), actor, in)
+		if err != nil {
+			t.Fatalf("Create returned err = %v, want nil", err)
+		}
+
+		if got.ID == uuid.Nil || got.ID != row.VenueID {
+			t.Errorf("Create returned ID = %v, want %v", got.ID, row.VenueID)
+		}
+		if got.OrganizerID != row.OrganizerID {
+			t.Errorf("Create returned OrganizerID = %v, want %v", got.OrganizerID, row.OrganizerID)
+		}
+		if got.Name != row.Name {
+			t.Errorf("Create returned Name = %v, want %v", got.Name, row.Name)
+		}
+		if got.Address != row.Address {
+			t.Errorf("Create returned Address = %v, want %v", got.Address, row.Address)
+		}
+		if got.Timezone != row.Timezone {
+			t.Errorf("Create returned Timezone = %v, want %v", got.Timezone, row.Timezone)
 		}
 	})
 }
