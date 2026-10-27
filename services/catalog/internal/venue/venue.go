@@ -20,8 +20,9 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("venue not found")
-	ErrInvalid  = errors.New("invalid venue")
+	ErrNotFound     = errors.New("venue not found")
+	ErrInvalid      = errors.New("invalid venue")
+	ErrCreateFailed = errors.New("failed to create venue")
 )
 
 type Venue struct {
@@ -89,7 +90,7 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 
 	row, err := s.q.CreateVenue(ctx, input)
 	if err != nil {
-		return Venue{}, fmt.Errorf("%w: failed to create venue: %v", ErrInvalid, err)
+		return Venue{}, fmt.Errorf("%w: failed to create venue: %v", ErrCreateFailed, err)
 	}
 
 	return Venue{
