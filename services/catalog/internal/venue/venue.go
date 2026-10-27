@@ -60,23 +60,10 @@ func NewService(q Queries) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venue, error) {
-	in.Name = strings.TrimSpace(in.Name)
-	if in.Name == "" {
-		return Venue{}, fmt.Errorf("%w: name is required", ErrInvalid)
-	}
-	in.Address = strings.TrimSpace(in.Address)
-	if in.Address == "" {
-		return Venue{}, fmt.Errorf("%w: address is required", ErrInvalid)
-	}
-	in.Timezone = strings.TrimSpace(in.Timezone)
-	if in.Timezone == "" {
-		return Venue{}, fmt.Errorf("%w: timezone is required", ErrInvalid)
-	}
-	if in.Timezone == "Local" {
-		return Venue{}, fmt.Errorf("%w: timezone must not be Local", ErrInvalid)
-	}
-	if _, err := time.LoadLocation(in.Timezone); err != nil {
-		return Venue{}, fmt.Errorf("%w: invalid timezone", ErrInvalid)
+	var err error
+	in, err = normalizeInput(in)
+	if err != nil {
+		return Venue{}, err
 	}
 
 	input := store.CreateVenueParams{
@@ -111,4 +98,26 @@ func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, er
 
 func (s *Service) List(ctx context.Context, actor Actor) ([]Venue, error) {
 	return []Venue{}, nil
+}
+
+func normalizeInput(in CreateInput) (CreateInput, error) {
+	in.Name = strings.TrimSpace(in.Name)
+	if in.Name == "" {
+		return CreateInput{}, fmt.Errorf("%w: name is required", ErrInvalid)
+	}
+	in.Address = strings.TrimSpace(in.Address)
+	if in.Address == "" {
+		return CreateInput{}, fmt.Errorf("%w: address is required", ErrInvalid)
+	}
+	in.Timezone = strings.TrimSpace(in.Timezone)
+	if in.Timezone == "" {
+		return CreateInput{}, fmt.Errorf("%w: timezone is required", ErrInvalid)
+	}
+	if in.Timezone == "Local" {
+		return CreateInput{}, fmt.Errorf("%w: timezone must not be Local", ErrInvalid)
+	}
+	if _, err := time.LoadLocation(in.Timezone); err != nil {
+		return CreateInput{}, fmt.Errorf("%w: invalid timezone", ErrInvalid)
+	}
+	return in, nil
 }
