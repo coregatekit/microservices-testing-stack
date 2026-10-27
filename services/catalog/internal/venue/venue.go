@@ -90,7 +90,7 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 
 	row, err := s.q.CreateVenue(ctx, input)
 	if err != nil {
-		return Venue{}, err
+		return Venue{}, fmt.Errorf("create venue: %w", err)
 	}
 
 	return Venue{
