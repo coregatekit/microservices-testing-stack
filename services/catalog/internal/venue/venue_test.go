@@ -46,9 +46,10 @@ func TestCreate_Invalid(t *testing.T) {
 
 func TestCreate_Error(t *testing.T) {
 	t.Run("CreateVenueReturnsError", func(t *testing.T) {
+		dbErr := errors.New("connection refused")
 		q := &QueriesMock{
 			CreateVenueFunc: func(ctx context.Context, arg store.CreateVenueParams) (store.Venue, error) {
-				return store.Venue{}, errors.New("some error")
+				return store.Venue{}, dbErr
 			},
 		}
 		in := venue.CreateInput{
@@ -57,8 +58,8 @@ func TestCreate_Error(t *testing.T) {
 			Timezone: "Asia/Bangkok",
 		}
 		_, err := venue.NewService(q).Create(t.Context(), actor, in)
-		if err == nil || errors.Is(err, venue.ErrInvalid) {
-			t.Fatalf("Create returned err = nil or ErrInvalid, want non-nil and not ErrInvalid")
+		if !errors.Is(err, dbErr) {
+			t.Fatalf("Create returned err = %v, want it to wrap %v", err, dbErr)
 		}
 	})
 }
