@@ -61,6 +61,9 @@ func TestCreate_Error(t *testing.T) {
 		if !errors.Is(err, dbErr) {
 			t.Fatalf("Create returned err = %v, want it to wrap %v", err, dbErr)
 		}
+		if errors.Is(err, venue.ErrInvalid) {
+			t.Errorf("Create returned err = %v, must not be ErrInvalid", err)
+		}
 	})
 }
 
