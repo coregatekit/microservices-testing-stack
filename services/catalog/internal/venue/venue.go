@@ -20,9 +20,8 @@ import (
 )
 
 var (
-	ErrNotFound     = errors.New("venue not found")
-	ErrInvalid      = errors.New("invalid venue")
-	ErrCreateFailed = errors.New("failed to create venue")
+	ErrNotFound = errors.New("venue not found")
+	ErrInvalid  = errors.New("invalid venue")
 )
 
 type Venue struct {
