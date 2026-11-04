@@ -246,6 +246,50 @@ func TestList_Success(t *testing.T) {
 			t.Errorf("ListVenuesByOrganizer was called with OrganizerID = %v, want %v", calls[0].OrganizerID, actor.OrganizerID)
 		}
 	})
+
+	t.Run("ReturnsVenuesInOrder", func(t *testing.T) {
+		rows := []store.Venue{
+			{
+				VenueID:     uuid.MustParse("01a1a570-3a28-76ed-991f-795348c97806"),
+				OrganizerID: "org-from-db",
+				Name:        "First Name",
+				Address:     "First Address",
+				Timezone:    "Asia/Tokyo",
+				CreatedAt:   time.Date(2026, 10, 26, 10, 0, 0, 0, time.UTC),
+				CreatedBy:   "first-creator",
+				UpdatedAt:   time.Date(2026, 10, 26, 11, 0, 0, 0, time.UTC),
+				UpdatedBy:   "first-updater",
+			},
+			{
+				VenueID:     uuid.MustParse("01a1a765-df26-793c-a1a3-12cc44596dd8"),
+				OrganizerID: "org-from-db",
+				Name:        "Second Name",
+				Address:     "Second Address",
+				Timezone:    "Asia/Shanghai",
+				CreatedAt:   time.Date(2026, 10, 27, 10, 0, 0, 0, time.UTC),
+				CreatedBy:   "second-creator",
+				UpdatedAt:   time.Date(2026, 10, 27, 11, 0, 0, 0, time.UTC),
+				UpdatedBy:   "second-updater",
+			},
+		}
+		q := &QueriesMock{
+			ListVenuesByOrganizerFunc: func(ctx context.Context, organizerID string) ([]store.Venue, error) {
+				return rows, nil
+			},
+		}
+
+		svc := venue.NewService(q)
+		got, err := svc.List(t.Context(), actor)
+		if err != nil {
+			t.Fatalf("List returned err = %v, want nil", err)
+		}
+		if len(got) != len(rows) {
+			t.Fatalf("List returned %d venues, want %d", len(got), len(rows))
+		}
+		for i := range got {
+			assertVenueMatchesRow(t, got[i], rows[i])
+		}
+	})
 }
 
 func assertVenueMatchesRow(t *testing.T, got venue.Venue, row store.Venue) {
