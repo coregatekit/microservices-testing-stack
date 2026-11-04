@@ -311,6 +311,26 @@ func TestList_Success(t *testing.T) {
 	})
 }
 
+func TestList_Error(t *testing.T) {
+	dbErr := errors.New("connection refused")
+	q := &QueriesMock{
+		ListVenuesByOrganizerFunc: func(ctx context.Context, organizerID string) ([]store.Venue, error) {
+			return nil, dbErr
+		},
+	}
+
+	got, err := venue.NewService(q).List(t.Context(), actor)
+	if !errors.Is(err, dbErr) {
+		t.Fatalf("List returned err = %v, want it to wrap %v", err, dbErr)
+	}
+	if err == dbErr {
+		t.Errorf("List returned err = %v without context, want it wrapped", err)
+	}
+	if got != nil {
+		t.Errorf("List returned %+v, want nil", got)
+	}
+}
+
 func assertVenueMatchesRow(t *testing.T, got venue.Venue, row store.Venue) {
 	t.Helper()
 
