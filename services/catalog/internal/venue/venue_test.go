@@ -165,3 +165,36 @@ func assertVenueCreateResult(t *testing.T, got venue.Venue, row store.Venue) {
 		t.Errorf("Create returned UpdatedBy = %v, want %v", got.UpdatedBy, row.UpdatedBy)
 	}
 }
+
+func TestGet_Success(t *testing.T) {
+	t.Run("PassesIDAndOrganizer", func(t *testing.T) {
+		q := &QueriesMock{
+			GetVenueFunc: func(ctx context.Context, arg store.GetVenueParams) (store.Venue, error) {
+				return store.Venue{}, nil
+			},
+		}
+		svc := venue.NewService(q)
+		actor := venue.Actor{
+			UserID:      "user-1",
+			OrganizerID: "org-1",
+		}
+		id := uuid.MustParse("01a1a570-3a28-76ed-991f-795348c97806")
+
+		_, err := svc.Get(t.Context(), actor, id)
+		if err != nil {
+			t.Fatalf("Get returned err = %v, want nil", err)
+		}
+
+		calls := q.GetVenueCalls()
+		if len(calls) != 1 {
+			t.Fatalf("GetVenue was called %d times, want 1", len(calls))
+		}
+		want := store.GetVenueParams{
+			VenueID:     id,
+			OrganizerID: actor.OrganizerID,
+		}
+		if got := calls[0].Arg; got != want {
+			t.Errorf("GetVenue arg = %+v, want %+v", got, want)
+		}
+	})
+}
