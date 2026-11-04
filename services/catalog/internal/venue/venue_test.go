@@ -193,4 +193,31 @@ func TestGet_Success(t *testing.T) {
 			t.Errorf("GetVenue arg = %+v, want %+v", got, want)
 		}
 	})
+
+	t.Run("ReturnsVenueOnSuccess", func(t *testing.T) {
+		row := store.Venue{
+			VenueID:     uuid.MustParse("01a1a570-3a28-76ed-991f-795348c97806"),
+			OrganizerID: "org-from-db",
+			Name:        "Stored Name",
+			Address:     "Stored Address",
+			Timezone:    "Asia/Tokyo",
+			CreatedAt:   time.Date(2026, 10, 26, 10, 0, 0, 0, time.UTC),
+			CreatedBy:   "creator-from-db",
+			UpdatedAt:   time.Date(2026, 10, 26, 11, 0, 0, 0, time.UTC),
+			UpdatedBy:   "updater-from-db",
+		}
+		q := &QueriesMock{
+			GetVenueFunc: func(ctx context.Context, arg store.GetVenueParams) (store.Venue, error) {
+				return row, nil
+			},
+		}
+
+		svc := venue.NewService(q)
+		got, err := svc.Get(t.Context(), actor, row.VenueID)
+		if err != nil {
+			t.Fatalf("Get returned err = %v, want nil", err)
+		}
+
+		assertVenueCreateResult(t, got, row)
+	})
 }
