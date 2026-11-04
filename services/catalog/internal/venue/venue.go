@@ -98,9 +98,16 @@ func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, er
 }
 
 func (s *Service) List(ctx context.Context, actor Actor) ([]Venue, error) {
-	_, err := s.q.ListVenuesByOrganizer(ctx, actor.OrganizerID)
+	rows, err := s.q.ListVenuesByOrganizer(ctx, actor.OrganizerID)
+	if err != nil {
+		return nil, err
+	}
 
-	return []Venue{}, err
+	venues := make([]Venue, len(rows))
+	for i, row := range rows {
+		venues[i] = toVenue(row)
+	}
+	return venues, nil
 }
 
 func normalizeInput(in CreateInput) (CreateInput, error) {
