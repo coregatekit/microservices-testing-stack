@@ -100,7 +100,7 @@ func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, er
 func (s *Service) List(ctx context.Context, actor Actor) ([]Venue, error) {
 	rows, err := s.q.ListVenuesByOrganizer(ctx, actor.OrganizerID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list venues: %w", err)
 	}
 
 	venues := make([]Venue, len(rows))
