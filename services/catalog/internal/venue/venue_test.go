@@ -66,6 +66,9 @@ func TestCreate_Error(t *testing.T) {
 		if errors.Is(err, venue.ErrInvalid) {
 			t.Errorf("Create returned err = %v, must not be ErrInvalid", err)
 		}
+		if err == dbErr {
+			t.Errorf("Create return error = %v without context, want it wrapped", err)
+		}
 	})
 }
 
@@ -221,6 +224,9 @@ func TestGet_Error(t *testing.T) {
 	}
 	if errors.Is(err, venue.ErrNotFound) {
 		t.Errorf("Get returned err = %v, must not be ErrNotFound", err)
+	}
+	if err == dbErr {
+		t.Errorf("Get returned err = %v without context, want it wrapped", err)
 	}
 }
 
