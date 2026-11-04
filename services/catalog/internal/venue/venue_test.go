@@ -206,6 +206,24 @@ func TestGet_NotFound(t *testing.T) {
 	}
 }
 
+func TestGet_Error(t *testing.T) {
+	dbErr := errors.New("connection refused")
+	q := &QueriesMock{
+		GetVenueFunc: func(ctx context.Context, arg store.GetVenueParams) (store.Venue, error) {
+			return store.Venue{}, dbErr
+		},
+	}
+
+	svc := venue.NewService(q)
+	_, err := svc.Get(t.Context(), actor, uuid.MustParse("01a1a570-3a28-76ed-991f-795348c97806"))
+	if !errors.Is(err, dbErr) {
+		t.Fatalf("Get returned err = %v, want it to wrap %v", err, dbErr)
+	}
+	if errors.Is(err, venue.ErrNotFound) {
+		t.Errorf("Get returned err = %v, must not be ErrNotFound", err)
+	}
+}
+
 func assertVenueMatchesRow(t *testing.T, got venue.Venue, row store.Venue) {
 	t.Helper()
 
