@@ -290,6 +290,25 @@ func TestList_Success(t *testing.T) {
 			assertVenueMatchesRow(t, got[i], rows[i])
 		}
 	})
+
+	t.Run("ReturnsEmptyListWhenNoRows", func(t *testing.T) {
+		q := &QueriesMock{
+			ListVenuesByOrganizerFunc: func(ctx context.Context, organizerID string) ([]store.Venue, error) {
+				return nil, nil // sqlc returns nil slice and nil error when no rows are found
+			},
+		}
+
+		got, err := venue.NewService(q).List(t.Context(), actor)
+		if err != nil {
+			t.Fatalf("List returned err = %v, want nil", err)
+		}
+		if got == nil {
+			t.Errorf("List returned nil, want empty list")
+		}
+		if len(got) != 0 {
+			t.Errorf("List returned %d venues, want 0", len(got))
+		}
+	})
 }
 
 func assertVenueMatchesRow(t *testing.T, got venue.Venue, row store.Venue) {
