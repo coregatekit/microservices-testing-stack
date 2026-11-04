@@ -93,7 +93,12 @@ func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venu
 }
 
 func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, error) {
-	return Venue{}, nil
+	_, err := s.q.GetVenue(ctx, store.GetVenueParams{
+		VenueID:     id,
+		OrganizerID: actor.OrganizerID,
+	})
+
+	return Venue{}, err
 }
 
 func (s *Service) List(ctx context.Context, actor Actor) ([]Venue, error) {

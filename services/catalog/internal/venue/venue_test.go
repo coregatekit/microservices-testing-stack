@@ -174,10 +174,6 @@ func TestGet_Success(t *testing.T) {
 			},
 		}
 		svc := venue.NewService(q)
-		actor := venue.Actor{
-			UserID:      "user-1",
-			OrganizerID: "org-1",
-		}
 		id := uuid.MustParse("01a1a570-3a28-76ed-991f-795348c97806")
 
 		_, err := svc.Get(t.Context(), actor, id)
