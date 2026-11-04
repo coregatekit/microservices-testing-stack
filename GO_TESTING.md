@@ -92,16 +92,21 @@ t.Errorf("CreateVenue was called %d times, want 0", n)
 ### เช็ก error
 
 - ใช้ `errors.Is(err, venue.ErrInvalid)` ไม่ใช้ `err == venue.ErrInvalid` เพราะ service ห่อ error ด้วย `fmt.Errorf("%w: ...")` ตัว error ที่ได้จึงไม่ใช่ตัวเดียวกับ sentinel
-- ถ้า service ต้องส่ง error ของ dependency ต่อขึ้นไป ให้เช็กทั้ง 2 ด้าน คือต้องห่อ error เดิมไว้ และต้องไม่กลายเป็น error ของ domain ผิดตัว
+- ถ้า service ต้องส่ง error ของ dependency ต่อขึ้นไป ให้เช็ก 3 อย่าง คือต้องมี error เดิมอยู่ในสาย ต้องห่อเพิ่มบริบทแล้ว และต้องไม่กลายเป็น error ของ domain ผิดตัว
 
 ```go
 if !errors.Is(err, dbErr) {
 	t.Fatalf("Create returned err = %v, want it to wrap %v", err, dbErr)
 }
+if err == dbErr {
+	t.Errorf("Create returned err = %v without context, want it wrapped", err)
+}
 if errors.Is(err, venue.ErrInvalid) {
 	t.Errorf("Create returned err = %v, must not be ErrInvalid", err)
 }
 ```
+
+`errors.Is` เป็น true ทั้งกับ error ที่ห่อแล้วและตัวเดิมที่ไม่ได้ห่อ จึงพิสูจน์ไม่ได้ว่ามีการห่อ การเช็ก `err == dbErr` เป็นกรณีเดียวที่ใช้ `==` เทียบ error เพราะต้องการรู้ว่าเป็นตัวเดิมเป๊ะหรือไม่
 
 ### table-driven test และ subtest
 
@@ -176,3 +181,18 @@ make test-integration SVC=catalog  # unit test และ integration test
 3. `refactor: …` จัดโค้ดให้ดีขึ้นโดยไม่เปลี่ยน behavior (ข้ามได้ถ้าไม่มีอะไรต้องแก้)
 
 prefix ของ commit บอกว่าแก้อะไร commit ที่แก้แค่ไฟล์ test ใช้ `test:` เสมอ แม้จะเป็นการแก้ test เพื่อจับ bug ก็ตาม
+
+#### เมื่อ test ไม่มี red
+
+ถ้าโค้ดรองรับเงื่อนไขนั้นอยู่แล้ว test จะผ่านตั้งแต่แรก ซึ่งยังไม่ได้พิสูจน์ว่า test จับโค้ดที่ผิดได้ ให้แก้โค้ดให้ผิดชั่วคราวเพื่อดูว่า test fail จริง
+
+1. แก้โค้ดให้ผิดตามแบบที่ test ควรจับได้ แบบละครั้ง
+2. รัน test แล้วดูว่า fail ที่บรรทัดและข้อความที่คาดไว้
+3. เปลี่ยนโค้ดกลับ รัน test ทั้ง package ให้ผ่าน แล้ว commit เฉพาะไฟล์ test
+
+| โค้ดที่ถูก | แก้ให้ผิดเป็น | test ที่ควร fail |
+| ---------- | ------------- | ---------------- |
+| `fmt.Errorf("get venue: %w", err)` | `fmt.Errorf("get venue: %v", err)` | เช็กว่ามี `dbErr` อยู่ในสาย |
+| `fmt.Errorf("get venue: %w", err)` | `err` ตัวเดิม ไม่ห่อ | เช็ก `err == dbErr` |
+| `fmt.Errorf("get venue: %w", err)` | `fmt.Errorf("%w: %w", ErrNotFound, err)` | เช็กว่าไม่ใช่ `ErrNotFound` |
+| `make([]Venue, len(rows))` | `var venues []Venue` แล้ว `append` | เช็กว่า list ไม่เป็น `nil` |
