@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/coregatekit/ticketlite/services/catalog/internal/store"
 )
@@ -87,6 +88,9 @@ func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, er
 		OrganizerID: actor.OrganizerID,
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return Venue{}, ErrNotFound
+		}
 		return Venue{}, fmt.Errorf("get venue: %w", err)
 	}
 
