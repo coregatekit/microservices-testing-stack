@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/coregatekit/ticketlite/services/catalog/internal/store"
 	"github.com/coregatekit/ticketlite/services/catalog/internal/venue"
@@ -189,6 +190,20 @@ func TestGet_Success(t *testing.T) {
 
 		assertVenueMatchesRow(t, got, row)
 	})
+}
+
+func TestGet_NotFound(t *testing.T) {
+	q := &QueriesMock{
+		GetVenueFunc: func(ctx context.Context, arg store.GetVenueParams) (store.Venue, error) {
+			return store.Venue{}, pgx.ErrNoRows
+		},
+	}
+
+	svc := venue.NewService(q)
+	_, err := svc.Get(t.Context(), actor, uuid.MustParse("01a1a570-3a28-76ed-991f-795348c97806"))
+	if !errors.Is(err, venue.ErrNotFound) {
+		t.Errorf("Get returned err = %v, want %v", err, venue.ErrNotFound)
+	}
 }
 
 func assertVenueMatchesRow(t *testing.T, got venue.Venue, row store.Venue) {
