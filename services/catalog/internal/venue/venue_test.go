@@ -224,6 +224,30 @@ func TestGet_Error(t *testing.T) {
 	}
 }
 
+func TestList_Success(t *testing.T) {
+	t.Run("PassesOrganizer", func(t *testing.T) {
+		q := &QueriesMock{
+			ListVenuesByOrganizerFunc: func(ctx context.Context, organizerID string) ([]store.Venue, error) {
+				return nil, nil
+			},
+		}
+
+		svc := venue.NewService(q)
+		_, err := svc.List(t.Context(), actor)
+		if err != nil {
+			t.Fatalf("List returned err = %v, want nil", err)
+		}
+
+		calls := q.ListVenuesByOrganizerCalls()
+		if len(calls) != 1 {
+			t.Fatalf("ListVenuesByOrganizer was called %d times, want 1", len(calls))
+		}
+		if calls[0].OrganizerID != actor.OrganizerID {
+			t.Errorf("ListVenuesByOrganizer was called with OrganizerID = %v, want %v", calls[0].OrganizerID, actor.OrganizerID)
+		}
+	})
+}
+
 func assertVenueMatchesRow(t *testing.T, got venue.Venue, row store.Venue) {
 	t.Helper()
 
