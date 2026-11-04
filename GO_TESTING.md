@@ -1,6 +1,6 @@
 # แนวทางการเขียน test ใน Go
 
-test ของ service ที่เขียนด้วย Go ใช้แพ็กเกจ `testing` ของ standard library อย่างเดียว เช็กผลด้วย `if` แล้วรายงานด้วย `t.Errorf` / `t.Fatalf` ไม่ใช้ assertion library เช่น testify
+test ของ service ที่เขียนด้วย Go ใช้แพ็กเกจ `testing` ของ standard library เช็กผลด้วย `if` แล้วรายงานด้วย `t.Errorf` / `t.Fatalf` ไม่ใช้ assertion library เช่น testify ส่วน struct ที่มีหลายช่องเทียบด้วย [go-cmp](https://github.com/google/go-cmp)
 
 เอกสารนี้อธิบายว่าทำไมถึงเลือกแบบนี้ และกติกาที่ test ทุกไฟล์ใช้ร่วมกัน ตัวอย่างทั้งหมดมาจาก [venue_test.go](services/catalog/internal/venue/venue_test.go)
 
@@ -45,15 +45,17 @@ testify เป็น library ที่ใช้กันแพร่หลาย
 
 ### เมื่อเทียบ struct แล้วยาวเกินไป
 
-ข้อเสียที่เห็นชัดที่สุดของแบบ standard library คือการเทียบ struct ทีละช่อง ถ้าเทียบทั้ง struct ด้วย `!=` ได้ ให้ทำแบบนั้นก่อน ถ้าทำไม่ได้ (struct มี slice หรือ map อยู่ข้างใน) หรืออยากเห็น diff ว่าช่องไหนต่าง ให้พิจารณา [go-cmp](https://github.com/google/go-cmp) ก่อนจะไปใช้ testify เพราะแก้แค่เรื่องการเทียบ โดยที่ส่วนอื่นยังเป็นโค้ด Go ธรรมดา
+ข้อเสียที่เห็นชัดที่สุดของแบบ standard library คือการเทียบ struct ทีละช่อง โปรเจกต์นี้จึงใช้ [go-cmp](https://github.com/google/go-cmp) เฉพาะใน test เพราะแก้แค่เรื่องการเทียบ โดยที่ส่วนอื่นยังเป็นโค้ด Go ธรรมดา
 
 ```go
 if diff := cmp.Diff(want, got); diff != "" {
-	t.Errorf("Create returned venue mismatch (-want +got):\n%s", diff)
+	t.Errorf("Venue mismatch (-want +got):\n%s", diff)
 }
 ```
 
-ตอนนี้ยังไม่ได้เพิ่ม go-cmp ใน `go.mod`
+- struct เล็กๆ ที่มีแค่ค่าที่เทียบตรงๆ ได้ เช่น `GetVenueParams` ใช้ `!=` ก็พอ
+- ใช้ `cmp.Diff` เมื่อ struct มีหลายช่อง มี slice หรือ map หรือมี `time.Time` เพราะ go-cmp เทียบเวลาด้วย method `Equal`
+- `want` ต้องเขียนใน test เอง อย่าเรียกโค้ดแปลงตัวเดียวกับที่กำลังทดสอบ เพราะถ้าโค้ดนั้นผิด `want` จะผิดตามและ test จะยังผ่าน
 
 ## กติกา
 

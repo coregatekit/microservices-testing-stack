@@ -217,7 +217,7 @@ sqlc diff       # ตรวจว่าโค้ดที่ commit ตรงก
 
 ## Testing (Go)
 
-test ของ service ที่เขียนด้วย Go ใช้แพ็กเกจ `testing` ของ standard library อย่างเดียว ไม่ใช้ assertion library ส่วน integration test แยกด้วย build tag `integration`
+test ของ service ที่เขียนด้วย Go ใช้แพ็กเกจ `testing` ของ standard library ไม่ใช้ assertion library เทียบ struct ด้วย go-cmp ส่วน integration test แยกด้วย build tag `integration`
 
 ```bash
 make test SVC=catalog              # เฉพาะ unit test
