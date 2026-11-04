@@ -60,8 +60,7 @@ func NewService(q Queries) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, actor Actor, in CreateInput) (Venue, error) {
-	var err error
-	in, err = normalizeInput(in)
+	in, err := normalizeInput(in)
 	if err != nil {
 		return Venue{}, err
 	}
@@ -87,7 +86,6 @@ func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, er
 		VenueID:     id,
 		OrganizerID: actor.OrganizerID,
 	})
-
 	if err != nil {
 		return Venue{}, fmt.Errorf("get venue: %w", err)
 	}
