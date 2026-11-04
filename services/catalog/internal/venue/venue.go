@@ -98,7 +98,9 @@ func (s *Service) Get(ctx context.Context, actor Actor, id uuid.UUID) (Venue, er
 }
 
 func (s *Service) List(ctx context.Context, actor Actor) ([]Venue, error) {
-	return []Venue{}, nil
+	_, err := s.q.ListVenuesByOrganizer(ctx, actor.OrganizerID)
+
+	return []Venue{}, err
 }
 
 func normalizeInput(in CreateInput) (CreateInput, error) {
