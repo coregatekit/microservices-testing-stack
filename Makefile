@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help require-svc db-up db-down db-reset db-psql \
 	migrate-create migrate-up migrate-down migrate-status migrate-redo migrate-validate \
-	proto-lint
+	proto-lint proto-gen
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -59,3 +59,6 @@ test-integration: require-svc ## Run integration tests for the specified service
 
 proto-lint: ## Lint protobuf files
 	buf lint
+
+proto-gen: require-svc ## Generate protobuf code, e.g. make proto-gen SVC=catalog
+	buf generate --template services/$(SVC)/buf.gen.yaml --path proto/ticketlite/$(SVC)
