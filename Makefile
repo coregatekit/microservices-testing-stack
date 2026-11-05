@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help require-svc db-up db-down db-reset db-psql \
-	migrate-create migrate-up migrate-down migrate-status migrate-redo migrate-validate
+	migrate-create migrate-up migrate-down migrate-status migrate-redo migrate-validate \
+	proto-lint
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  %-18s %s\n", $$1, $$2}'
@@ -53,3 +54,8 @@ test: require-svc ## Run all tests for the specified service
 
 test-integration: require-svc ## Run integration tests for the specified service
 	cd services/$(SVC) && go test -tags=integration ./...
+
+# --- Protobuf ---------------------------------------------------------------
+
+proto-lint: ## Lint protobuf files
+	buf lint
