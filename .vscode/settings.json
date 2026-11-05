@@ -4,5 +4,13 @@
             "-tags=integration"
         ]
     },
+    "[proto]": {
+        "editor.defaultFormatter": "bufbuild.vscode-buf" ,
+        "editor.formatOnSave": true
+    },
+    "[proto3]": {
+        "editor.defaultFormatter": "bufbuild.vscode-buf" ,
+        "editor.formatOnSave": true
+    },
     "python.terminal.useEnvFile": true
 }
