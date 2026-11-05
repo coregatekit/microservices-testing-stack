@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package ticketlite.catalog.v1;
+
+import "google/protobuf/timestamp.proto";
+
+service VenueService {
+  rpc CreateVenue(CreateVenueRequest) returns (CreateVenueResponse);
+  rpc GetVenue(GetVenueRequest) returns (GetVenueResponse);
+  rpc ListVenues(ListVenuesRequest) returns (ListVenuesResponse);
+}
+
+message Venue {
+  string id = 1;
+  string name = 2;
+  string address = 3;
+  string timezone = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateVenueRequest {
+  string name = 1;
+  string address = 2;
+  string timezone = 3;
+}
+message CreateVenueResponse {
+  Venue venue = 1;
+}
+message GetVenueRequest {
+  string id = 1;
+}
+message GetVenueResponse {
+  Venue venue = 1;
+}
+message ListVenuesRequest {}
+message ListVenuesResponse {
+  repeated Venue venues = 1;
+}
